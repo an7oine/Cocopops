@@ -6,6 +6,7 @@
 
 @interface NSArray (CreateByBlock)
 
-+ (instancetype)arrayWithSize:(NSUInteger)size byBlock:(id (^)(NSArray *priorObjects, NSUInteger idx))block; // creates an array inductively 
+// create an array inductively
++ (instancetype)arrayWithSize:(NSUInteger)size byBlock:(id (^)(NSArray *priorObjects, NSUInteger idx))block;
 
 @end

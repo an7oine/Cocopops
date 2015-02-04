@@ -6,6 +6,7 @@
 
 @interface NSDictionary (CollectionValues)
 
-- (id)keyForCollectionContainingObject:(id)object; // return any key for which the value satisfies [value containsObject:object]
+// return any key for which the value satisfies [value containsObject:object]
+- (id)keyForCollectionContainingObject:(id)object;
 
 @end

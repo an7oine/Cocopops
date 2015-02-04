@@ -6,6 +6,7 @@
 
 @interface NSData (RandomData)
 
-+ (instancetype)randomDataWithSize:(size_t)size; // creates a new NSData instance with given size, randomized content
+// create a new NSData instance with given size, randomized content
++ (instancetype)randomDataWithSize:(size_t)size;
 
 @end

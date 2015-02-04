@@ -6,6 +6,7 @@
 
 @interface NSArray (DeepCopy)
 
-- (NSArray *)deepCopy; // creates a new array containing a copy of each object in self
+// create a new array containing a copy of each object in self
+- (NSArray *)deepCopy;
 
 @end

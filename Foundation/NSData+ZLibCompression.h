@@ -8,7 +8,10 @@
 
 @interface NSData (ZLibCompression)
 
-- (NSData *)deflate; // decode uncompressed length with 8 bytes, followed by zlib compression result
-- (NSData *)inflate; // encode uncompressed length in 8 first bytes, with zlib compress result following
+// compress with zlib, prepend uncompressed data length in 64 bits
+- (NSData *)deflate;
+
+// read uncompressed length, then uncompress with zlib
+- (NSData *)inflate;
 
 @end

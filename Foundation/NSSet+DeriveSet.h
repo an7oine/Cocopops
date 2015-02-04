@@ -6,6 +6,7 @@
 
 @interface NSSet (DeriveSet)
 
-- (NSSet *)deriveSetUsingBlock:(id (^)(id obj, BOOL *stop))block; // derives a new set by invoking the block with each original element
+// derive a new set by invoking block with each original element
+- (NSSet *)deriveSetUsingBlock:(id (^)(id obj, BOOL *stop))block;
 
 @end

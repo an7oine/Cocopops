@@ -6,6 +6,7 @@
 
 @interface NSArray (Cycle)
 
-- (NSArray *)arrayByCyclingFromIndex:(NSUInteger)index; // creates a new array where self[index] is firstObject, self[index-1] is lastObject
+// create a new array where self[index] is firstObject, self[index-1] is lastObject
+- (NSArray *)arrayByCyclingFromIndex:(NSUInteger)index;
 
 @end
