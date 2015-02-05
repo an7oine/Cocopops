@@ -16,7 +16,7 @@
 
 // set horizontally adjacent items logically apart by this factor (defaults to 1, 2 is hexagonal)
 // note that cells are always enumerated from 0 to however many cells fit on each row
-// example: hexagonal grid with north=0, south=2, west=0, east=2, 
+// example: hexagonal grid with north=0, south=2, west=0, east=2,
 // so that logical item coordinates and their corresponding (section,item) pairs are:
 // 0-0,0-2,0-4, 1-1,1-3, 2-0,2-2,2-4 / (0,0),(0,1),(0,2), (1,0),(1,1), (2,0),(2,1),(2,2)
 @property (nonatomic) NSInteger adjacentItemsSeparation;

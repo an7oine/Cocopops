@@ -112,7 +112,7 @@
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     UICollectionViewLayoutAttributes *attributes = [self.class.layoutAttributesClass layoutAttributesForCellWithIndexPath:indexPath];
-    
+
     NSInteger row = [self rowOfCellWithIndexPath:indexPath];
     NSInteger column = [self columnOfCellWithIndexPath:indexPath];
 
@@ -128,7 +128,7 @@
 - (void)prepareLayout
 {
     NSMutableDictionary *layoutAttributes = [NSMutableDictionary new];
-    
+
     for (NSInteger section=0, row = self.north; row <= self.south; section++, row++)
         for (NSInteger item=0, column = [self westernBoundInSection:section]; column <= [self easternBoundInSection:section]; item++, column+=self.adjacentItemsSeparation)
         {

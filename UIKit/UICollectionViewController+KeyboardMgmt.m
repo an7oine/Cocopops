@@ -21,12 +21,12 @@
 {
 	CGRect kbdFrame = [aNotification.userInfo[UIKeyboardFrameBeginUserInfoKey] CGRectValue];
 	CGRect adjustedFrame = [self.view convertRect:kbdFrame fromView:self.view.window];
-    
+
     UIEdgeInsets contentInset = self.collectionView.contentInset;
     contentInset.bottom = adjustedFrame.size.height;
     self.collectionView.contentInset = contentInset;
     self.collectionView.scrollIndicatorInsets = contentInset;
-    
+
     // Scroll the currently selected cell, if needed, so it remains visible
     UICollectionViewCell *activeCell = [self.collectionView cellForItemAtIndexPath:self.collectionView.indexPathsForSelectedItems.lastObject];
     if (activeCell)

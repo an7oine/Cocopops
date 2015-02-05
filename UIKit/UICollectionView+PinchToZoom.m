@@ -50,11 +50,11 @@
 {
 	CollectionZoomPinchGestureRecognizer *pinchRecognizer = [[CollectionZoomPinchGestureRecognizer alloc] initWithTarget:self action:@selector(gotPinchToZoomGesture:)];
 	[self addGestureRecognizer:pinchRecognizer];
-    
+
     CollectionZoomTapGestureRecognizer *doubleTapRecognizer = [[CollectionZoomTapGestureRecognizer alloc] initWithTarget:self action:@selector(gotDoubleTapGesture:)];
     doubleTapRecognizer.numberOfTapsRequired = 2;
     [self addGestureRecognizer:doubleTapRecognizer];
-	
+
 	pinchRecognizer.factors = doubleTapRecognizer.factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
 }
 
@@ -71,16 +71,16 @@
 	// clip gesture-originating target zoom factor to min, max limits
 	CGFloat factor = MIN( MAX(sender.scale, sender.factors.min / sender.factors.current), sender.factors.max / sender.factors.current );
 	sender.factors.current *= factor;
-	
+
 	CGPoint focusPoint = [sender locationInView:self];
 
     [self.collectionViewLayout applyZoomFactor:factor];
     [self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
-    
+
 	// redraw cell contents only once after the gesture ends
     if (sender.state == UIGestureRecognizerStateEnded)
         [self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
-    
+
 	// reset gesture scale each time it is applied to the content
 	sender.scale = 1;
 }
@@ -90,19 +90,19 @@
     CGFloat targetFactor = sender.factors.current / sender.factors.max > 0.75f? sender.factors.min : sender.factors.max;
     CGFloat factor = targetFactor / sender.factors.current;
 	sender.factors.current = targetFactor;
-    
+
     CGPoint focusPoint = [sender locationInView:self];
-    
+
     CGAffineTransform originalTransform = self.transform;
 
     [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
     {
-	self.transform = CGAffineTransformMakeScale(factor, factor);
+		self.transform = CGAffineTransformMakeScale(factor, factor);
     } completion:^(BOOL finished)
     {
     	self.transform = originalTransform;
     	[self.collectionViewLayout applyZoomFactor:factor];
-	[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
+		[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
     	[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
     }];
 }
