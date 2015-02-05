@@ -93,11 +93,18 @@
     
     CGPoint focusPoint = [sender locationInView:self];
     
+    CGAffineTransform originalTransform = self.transform;
+
     [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
     {
-		[self.collectionViewLayout applyZoomFactor:factor];
-		[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
-    } completion:^(BOOL finished){ }];
+	self.transform = CGAffineTransformMakeScale(factor, factor);
+    } completion:^(BOOL finished)
+    {
+    	self.transform = originalTransform;
+    	[self.collectionViewLayout applyZoomFactor:factor];
+	[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
+    	[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
+    }];
 }
 
 @end
