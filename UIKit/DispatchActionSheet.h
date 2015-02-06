@@ -13,6 +13,8 @@
 - (void)setCancelButtonBlock:(void (^)(NSInteger buttonIndex))block;
 - (void)setDestructiveButtonBlock:(void (^)(NSInteger buttonIndex))block;
 
+- (void (^)(NSInteger))blockWithButtonIndex:(NSInteger)buttonIndex;
+
 // on iPad, one dummy button is added to offset the effect of iOS deleting one upon display
 - (void)showAdjustedToDeviceWithView:(UIView *)view frame:(CGRect)frame;
 - (void)showAdjustedToDeviceWithNavigationController:(UINavigationController *)navigationController;

@@ -74,6 +74,11 @@
     self.dispatchActionDelegate.blockDictionary[@( self.destructiveButtonIndex )] = block;
 }
 
+- (void (^)(NSInteger))blockWithButtonIndex:(NSInteger)buttonIndex
+{
+	return self.dispatchActionDelegate.blockDictionary[@( buttonIndex )];
+}
+
 
 #pragma mark - Public methods: iPad workarounds
 

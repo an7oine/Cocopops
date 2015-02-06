@@ -18,10 +18,10 @@
 	if (_content & kToolbarTitle)
 	{
 		// a textual button bearing an empty string
-		[items addObject:[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil]];
+		[items addObject:_titleItem=[[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil]];
 		// if this is not the last (only) item, add a flexible gap next
 		if ((_content & ~kToolbarTitle) > kToolbarTitle)
-			[items addObject:_titleItem=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
+			[items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
 	}
 
 	if (_content & kToolbarArrows)
