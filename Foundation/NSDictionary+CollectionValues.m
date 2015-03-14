@@ -6,6 +6,14 @@
 
 @implementation NSDictionary (CollectionValues)
 
+- (NSSet *)keysForCollectionsContainingObject:(id)object
+{
+	return [[NSSet setWithArray:self.allKeys] objectsPassingTest:^BOOL(id obj, BOOL *stop)
+	{
+		return [self[obj] containsObject:object];
+	}];
+}
+
 - (id)keyForCollectionContainingObject:(id)object
 {
     for (id key in self.allKeys)
