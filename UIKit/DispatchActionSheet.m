@@ -84,16 +84,16 @@
 
 - (void)showAdjustedToDeviceWithView:(UIView *)view frame:(CGRect)frame
 {
-    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad)
-        [self addButtonWithTitle:@"-"]; // dummy iPad button
+	//    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) // obsolete since iOS 8?
+	//        [self addButtonWithTitle:@"-"]; // dummy iPad button
 
     [self showInView:view];
 }
 
 - (void)showAdjustedToDeviceWithNavigationController:(UINavigationController *)navigationController
 {
-    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad)
-        [self addButtonWithTitle:@"-"]; // dummy iPad button
+	//	if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) // obsolete since iOS 8?
+	//		[self addButtonWithTitle:@"-"]; // dummy iPad button
 
     [self showInView:navigationController.toolbar];
 }
