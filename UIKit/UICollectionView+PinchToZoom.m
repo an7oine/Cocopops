@@ -56,6 +56,17 @@
     [self addGestureRecognizer:doubleTapRecognizer];
 
 	pinchRecognizer.factors = doubleTapRecognizer.factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
+
+	if (minimumFactor > 1.0f)
+	{
+		[self.collectionViewLayout applyZoomFactor:minimumFactor];
+		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
+	}
+	else if (maximumFactor < 1.0f)
+	{
+		[self.collectionViewLayout applyZoomFactor:maximumFactor];
+		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
+	}
 }
 
 - (void)adjustContentOffsetForFocusPoint:(CGPoint)point factor:(CGFloat)factor
