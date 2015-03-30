@@ -60,19 +60,24 @@
 #pragma mark - Helpers
 
 - (NSInteger)numberOfSections { return self.south - self.north + 1; }
+- (NSInteger)phaseOf:(NSInteger)index
+{
+	NSInteger phase = index;
+	while (phase < 0)
+		phase += self.adjacentItemsSeparation;
+	return phase % self.adjacentItemsSeparation;
+}
 - (NSInteger)westernBoundInSection:(NSInteger)section
 {
-    NSInteger rowModulo = (self.north + section) % self.adjacentItemsSeparation;
-    NSInteger columnModulo = self.west % self.adjacentItemsSeparation;
-    NSInteger modulo = rowModulo<columnModulo? columnModulo-rowModulo : rowModulo-columnModulo;
-    return self.west + modulo;
+	NSInteger rowPhase = [self phaseOf:self.north+section], westPhase = [self phaseOf:self.west];
+    NSInteger phaseDiff = rowPhase<westPhase? westPhase-rowPhase : rowPhase-westPhase;
+    return self.west + phaseDiff;
 }
 - (NSInteger)easternBoundInSection:(NSInteger)section
 {
-    NSInteger rowModulo = (self.north + section) % self.adjacentItemsSeparation;
-    NSInteger columnModulo = self.east % self.adjacentItemsSeparation;
-    NSInteger modulo = rowModulo<columnModulo? columnModulo-rowModulo : rowModulo-columnModulo;
-    return self.east - modulo;
+	NSInteger rowPhase = [self phaseOf:self.north+section], eastPhase = [self phaseOf:self.east];
+	NSInteger phaseDiff = rowPhase<eastPhase? eastPhase-rowPhase : rowPhase-eastPhase;
+    return self.east - phaseDiff;
 }
 - (NSInteger)numberOfItemsInSection:(NSInteger)section
 {
