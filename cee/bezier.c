@@ -16,6 +16,16 @@ int lines_intersect(double p1x,double p1y, double p2x,double p2y, double q1x,dou
 	return x+0.0001 > p1x && x-0.0001 < p2x && x+0.0001 > q1x && x-0.0001 < q2x;
 }
 
+bezier_t bezier_make(double p1x,double p1y, double p2x,double p2y, double p3x,double p3y, double p4x,double p4y)
+{
+	return (bezier_t){ p1x,p1y, p2x,p2y, p3x,p3y, p4x,p4y };
+}
+
+int bezier_iszero(bezier_t a)
+{
+	return a.p1x == a.p4x && a.p1y == a.p4y;
+}
+
 void bezier_reverse(bezier_t in, bezier_t *out)
 {
 	*out = (bezier_t){ in.p4x,in.p4y, in.p3x,in.p3y, in.p2x,in.p2y, in.p1x,in.p1y };
@@ -24,6 +34,13 @@ void bezier_reverse(bezier_t in, bezier_t *out)
 void bezier_point(bezier_t a, double t, double *x, double *y)
 {
 	double u=1-t, t0=u*u*u, t1=3.0*u*u*t, t2=3.0*u*t*t, t3=t*t*t;
+	*x = t0*a.p1x + t1*a.p2x + t2*a.p3x + t3*a.p4x;
+	*y = t0*a.p1y + t1*a.p2y + t2*a.p3y + t3*a.p4y;
+}
+
+void bezier_tangent(bezier_t a, double t, double *x, double *y)
+{
+	double u=1-t, t0=-3*u*u, t1=3*u*u - 6*t*u, t2=-3*t*t + 6*t*u, t3=3*t*t;
 	*x = t0*a.p1x + t1*a.p2x + t2*a.p3x + t3*a.p4x;
 	*y = t0*a.p1y + t1*a.p2y + t2*a.p3y + t3*a.p4y;
 }
