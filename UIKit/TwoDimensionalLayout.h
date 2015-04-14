@@ -40,3 +40,8 @@
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 @end
+
+@interface TwoDimensionalLayout (Transformation)
+- (CGAffineTransform)cellTransform;
+- (CGRect)cellFrameWithFrame:(CGRect)frame;
+@end

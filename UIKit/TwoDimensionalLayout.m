@@ -106,12 +106,22 @@
 
 - (CGRect)frameForRow:(NSInteger)row column:(NSInteger)column
 {
-    return CGRectMake(
+	CGFloat width = self.itemSize.width * self.zoomFactor;
+	CGFloat height = self.itemSize.height * self.zoomFactor;
+	CGRect frame = CGRectMake(
                       (column - self.west) * self.itemSpacing.width * self.zoomFactor,
                       (row - self.north) * self.itemSpacing.height * self.zoomFactor,
-                      self.itemSize.width * self.zoomFactor,
-                      self.itemSize.height * self.zoomFactor
+                      width,
+					  height
                       );
+	if ([self respondsToSelector:@selector(cellTransform)])
+	{
+		CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.cellTransform);
+		CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
+		return [self cellFrameWithFrame:CGRectMake(centre.x-0.5f*width, centre.y-0.5f*height, width, height)];
+	}
+	else
+		return frame;
 }
 
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -146,6 +156,12 @@
 
 - (CGSize)collectionViewContentSize
 {
+	CGRect frame = [self frameForRow:self.north column:self.west];
+	frame = CGRectUnion(frame, [self frameForRow:self.north column:self.east]);
+	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.west]);
+	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.east]);
+	return CGRectIntegral(frame).size;
+
     CGFloat width = (self.itemSize.width + self.itemSpacing.width * (self.east - self.west)) * self.zoomFactor;
     CGFloat height = (self.itemSize.height + self.itemSpacing.height * (self.south - self.north)) * self.zoomFactor;
 	return CGSizeMake(width, height);
