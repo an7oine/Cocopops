@@ -161,10 +161,6 @@
 	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.west]);
 	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.east]);
 	return CGRectIntegral(frame).size;
-
-    CGFloat width = (self.itemSize.width + self.itemSpacing.width * (self.east - self.west)) * self.zoomFactor;
-    CGFloat height = (self.itemSize.height + self.itemSpacing.height * (self.south - self.north)) * self.zoomFactor;
-	return CGSizeMake(width, height);
 }
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
