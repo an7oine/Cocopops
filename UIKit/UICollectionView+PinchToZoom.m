@@ -98,7 +98,7 @@
 
 - (IBAction)gotDoubleTapGesture:(CollectionZoomTapGestureRecognizer *)sender
 {
-    CGFloat targetFactor = sender.factors.current / sender.factors.max > 0.75f? sender.factors.min : sender.factors.max;
+    CGFloat targetFactor = sender.factors.current / sender.factors.max > sender.factors.min / sender.factors.current? sender.factors.min : sender.factors.max;
     CGFloat factor = targetFactor / sender.factors.current;
 	sender.factors.current = targetFactor;
 
