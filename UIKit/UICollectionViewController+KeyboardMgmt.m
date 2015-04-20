@@ -17,9 +17,9 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 }
 
-- (void)keyboardDidShow:(NSNotification*)aNotification
+- (void)keyboardDidShow:(NSNotification *)aNotification
 {
-	CGRect kbdFrame = [aNotification.userInfo[UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+	CGRect kbdFrame = [aNotification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
 	CGRect adjustedFrame = [self.view convertRect:kbdFrame fromView:self.view.window];
 
     UIEdgeInsets contentInset = self.collectionView.contentInset;
@@ -40,7 +40,7 @@
     }
 }
 
-- (void)keyboardWillHide:(NSNotification*)aNotification
+- (void)keyboardWillHide:(NSNotification *)aNotification
 {
     UIEdgeInsets contentInset = self.collectionView.contentInset;
     contentInset.bottom = 0.0;
