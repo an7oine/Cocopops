@@ -79,23 +79,4 @@
 	return self.dispatchActionDelegate.blockDictionary[@( buttonIndex )];
 }
 
-
-#pragma mark - Public methods: iPad workarounds
-
-- (void)showAdjustedToDeviceWithView:(UIView *)view frame:(CGRect)frame
-{
-	//    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) // obsolete since iOS 8?
-	//        [self addButtonWithTitle:@"-"]; // dummy iPad button
-
-    [self showInView:view];
-}
-
-- (void)showAdjustedToDeviceWithNavigationController:(UINavigationController *)navigationController
-{
-	//	if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) // obsolete since iOS 8?
-	//		[self addButtonWithTitle:@"-"]; // dummy iPad button
-
-    [self showInView:navigationController.toolbar];
-}
-
 @end

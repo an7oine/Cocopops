@@ -4,6 +4,8 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol TwoDLayoutDelegate;
+
 // Two-Dimensional Collection View Layout, where:
 // sections amount to rows from North to South
 // items amount to consecutive cells on one row from West to East
@@ -36,12 +38,19 @@
 @property (nonatomic) CGSize itemSpacing;
 @property (nonatomic) CGFloat zoomFactor;
 
+// delegate
+@property (nonatomic, weak) id <TwoDLayoutDelegate> delegate;
+
+@property (nonatomic, readonly) CGPoint contentOrigin;
+
 // override in subclass, if needed
+- (CGAffineTransform)transform;
+- (CGRect)cellFrameWithFrame:(CGRect)frame;
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 @end
 
-@interface TwoDimensionalLayout (Transformation)
-- (CGAffineTransform)cellTransform;
-- (CGRect)cellFrameWithFrame:(CGRect)frame;
+@protocol TwoDLayoutDelegate <NSObject>
+- (BOOL)layout:(TwoDimensionalLayout *)layout containsActiveCellInRow:(NSInteger)row column:(NSInteger)column;
+- (void)layoutDidReshape:(TwoDimensionalLayout *)layout;
 @end

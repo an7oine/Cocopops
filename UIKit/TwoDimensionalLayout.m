@@ -9,7 +9,11 @@
 @implementation TwoDimensionalLayout
 {
     NSMutableDictionary *_layoutAttributes;
+	CGSize _collectionViewContentSize;
 }
+
+@synthesize contentOrigin=_contentOrigin;
+- (CGSize)collectionViewContentSize { return _collectionViewContentSize; }
 
 - (void)setDefaultValues
 {
@@ -114,14 +118,10 @@
                       width,
 					  height
                       );
-	if ([self respondsToSelector:@selector(cellTransform)])
-	{
-		CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.cellTransform);
-		CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
-		return [self cellFrameWithFrame:CGRectMake(centre.x-0.5f*width, centre.y-0.5f*height, width, height)];
-	}
-	else
-		return frame;
+
+	CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.transform);
+	CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
+	return [self cellFrameWithFrame:CGRectMake(centre.x-0.5f*width, centre.y-0.5f*height, width, height)];
 }
 
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -143,24 +143,26 @@
 - (void)prepareLayout
 {
     NSMutableDictionary *layoutAttributes = [NSMutableDictionary new];
+	CGRect activeFrame = CGRectNull;
 
     for (NSInteger section=0, row = self.north; row <= self.south; section++, row++)
         for (NSInteger item=0, column = [self westernBoundInSection:section]; column <= [self easternBoundInSection:section]; item++, column+=self.adjacentItemsSeparation)
         {
             NSIndexPath *indexPath = [NSIndexPath indexPathForItem:item inSection:section];
             layoutAttributes[indexPath] = [self createLayoutAttributesForItemAtIndexPath:indexPath];
+			if (! self.delegate || [self.delegate layout:self containsActiveCellInRow:row column:column])
+				activeFrame = CGRectUnion(activeFrame, [layoutAttributes[indexPath] frame]);
         }
 
     _layoutAttributes = layoutAttributes;
-}
+	_collectionViewContentSize = activeFrame.size;
+	_contentOrigin = activeFrame.origin;
 
-- (CGSize)collectionViewContentSize
-{
-	CGRect frame = [self frameForRow:self.north column:self.west];
-	frame = CGRectUnion(frame, [self frameForRow:self.north column:self.east]);
-	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.west]);
-	frame = CGRectUnion(frame, [self frameForRow:self.south column:self.east]);
-	return CGRectIntegral(frame).size;
+	for (UICollectionViewLayoutAttributes *attributes in _layoutAttributes.allValues)
+		attributes.frame = CGRectOffset(attributes.frame, -_contentOrigin.x, -_contentOrigin.y);
+
+	if (self.delegate)
+		[self.delegate layoutDidReshape:self];
 }
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
@@ -173,6 +175,16 @@
 - (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     return _layoutAttributes[indexPath];
+}
+
+- (CGAffineTransform)transform
+{
+	return CGAffineTransformIdentity;
+}
+
+- (CGRect)cellFrameWithFrame:(CGRect)frame
+{
+	return frame;
 }
 
 @end
