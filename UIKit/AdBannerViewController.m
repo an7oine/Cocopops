@@ -166,10 +166,12 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     NSNumber *animationDuration = aNotification.userInfo[UIKeyboardAnimationDurationUserInfoKey];
 
     [UIView animateWithDuration:animationDuration.floatValue delay:0.0f options:animationCurve.integerValue animations:^
-     {
-         [self.view setNeedsLayout];
-         [self.view layoutIfNeeded];
-     } completion:NULL];
+    {
+    } completion:^(BOOL finished)
+	{
+		 [self.view setNeedsLayout];
+		 [self.view layoutIfNeeded];
+	}];
 }
 
 - (void)keyboardWillHide:(NSNotification*)aNotification
@@ -180,10 +182,12 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     NSNumber *animationDuration = aNotification.userInfo[UIKeyboardAnimationDurationUserInfoKey];
 
     [UIView animateWithDuration:animationDuration.floatValue delay:0.0f options:animationCurve.integerValue animations:^
-     {
-         [self.view setNeedsLayout];
-         [self.view layoutIfNeeded];
-     } completion:NULL];
+	{
+	} completion:^(BOOL finished)
+	{
+		[self.view setNeedsLayout];
+		[self.view layoutIfNeeded];
+	}];
 }
 
 @end

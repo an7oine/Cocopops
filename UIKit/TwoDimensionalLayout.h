@@ -51,6 +51,5 @@
 @end
 
 @protocol TwoDLayoutDelegate <NSObject>
-- (BOOL)layout:(TwoDimensionalLayout *)layout containsActiveCellInRow:(NSInteger)row column:(NSInteger)column;
-- (void)layoutDidReshape:(TwoDimensionalLayout *)layout;
+- (BOOL)layout:(TwoDimensionalLayout *)layout shouldIncludeActiveCellInRow:(NSInteger)row column:(NSInteger)column;
 @end

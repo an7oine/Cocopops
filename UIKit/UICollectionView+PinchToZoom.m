@@ -94,6 +94,9 @@
 
 	// reset gesture scale each time it is applied to the content
 	sender.scale = 1;
+
+	if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+		[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:(sender.state == UIGestureRecognizerStateEnded)];
 }
 
 - (IBAction)gotDoubleTapGesture:(CollectionZoomTapGestureRecognizer *)sender
@@ -106,15 +109,23 @@
 
     CGAffineTransform originalTransform = self.transform;
 
-    [UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
+	CGPoint translationPoint = CGPointMake(focusPoint.x - self.contentOffset.x - 0.5f*self.frame.size.width, focusPoint.y - self.contentOffset.y - 0.5f*self.frame.size.height);
+	CGAffineTransform targetTransform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
+	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeScale(factor, factor));
+	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
+
+	[UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
     {
-		self.transform = CGAffineTransformMakeScale(factor, factor);
+		self.transform = targetTransform;
     } completion:^(BOOL finished)
     {
     	self.transform = originalTransform;
     	[self.collectionViewLayout applyZoomFactor:factor];
 		[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
     	[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
+
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetFactor gestureFinished:YES];
     }];
 }
 

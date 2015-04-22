@@ -15,3 +15,7 @@
 @interface UICollectionViewLayout (ZoomFactor)
 - (void)applyZoomFactor:(CGFloat)zoomFactor; // multiply current factor by this one
 @end
+
+@protocol UICollectionViewZoomDelegate <UICollectionViewDelegate>
+- (void)collectionView:(UICollectionView *)collectionView didSetZoomFactor:(CGFloat)zoomFactor gestureFinished:(BOOL)gestureFinished;
+@end

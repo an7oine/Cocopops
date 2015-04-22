@@ -150,7 +150,7 @@
         {
             NSIndexPath *indexPath = [NSIndexPath indexPathForItem:item inSection:section];
             layoutAttributes[indexPath] = [self createLayoutAttributesForItemAtIndexPath:indexPath];
-			if (! self.delegate || [self.delegate layout:self containsActiveCellInRow:row column:column])
+			if (! self.delegate || [self.delegate layout:self shouldIncludeActiveCellInRow:row column:column])
 				activeFrame = CGRectUnion(activeFrame, [layoutAttributes[indexPath] frame]);
         }
 
@@ -160,9 +160,6 @@
 
 	for (UICollectionViewLayoutAttributes *attributes in _layoutAttributes.allValues)
 		attributes.frame = CGRectOffset(attributes.frame, -_contentOrigin.x, -_contentOrigin.y);
-
-	if (self.delegate)
-		[self.delegate layoutDidReshape:self];
 }
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
