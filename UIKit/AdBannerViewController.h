@@ -20,6 +20,8 @@ extern NSString * const BannerViewActionDidFinish;
 // 3. do [adBannerVC performSegueWithIdentifier:@"MySegueIdentifier" sender:nil] in code
 
 @interface AdBannerViewController : UIViewController
+@property (nonatomic) BOOL hideAdvertising;
+@property (nonatomic) NSString *hideAdvertisingIAPProductIdentifier; // if set, monitor purchases with this identifier and hide adverts in response
 @property (nonatomic, weak) IBOutlet UIViewController *contentController;
 @end
 

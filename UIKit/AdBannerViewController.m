@@ -3,6 +3,7 @@
 //
 
 #import "AdBannerViewController.h"
+#import "InAppPurchaseController.h"
 
 #import <iAd/iAd.h>
 
@@ -17,6 +18,8 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     ADBannerView *_adBanner;
     CGRect _keyboardFrame;
 }
+
+@synthesize hideAdvertising=_hideAdvertising, hideAdvertisingIAPProductIdentifier=_hideAdvertisingIAPProductIdentifier;
 
 + (ADBannerView *)adBanner
 {
@@ -51,6 +54,13 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     _keyboardFrame = CGRectNull;
 }
 
+- (void)setHideAdvertisingIAPProductIdentifier:(NSString *)hideAdvertisingIAPProductIdentifier
+{
+	if (hideAdvertisingIAPProductIdentifier)
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hideAdvertisingWithPurchasedProduct:) name:InAppPurchaseProductPurchased object:nil];
+	_hideAdvertisingIAPProductIdentifier = hideAdvertisingIAPProductIdentifier;
+}
+
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation
 {
     return [self.contentController preferredInterfaceOrientationForPresentation];
@@ -64,7 +74,8 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     [super viewWillAppear:animated];
 
-    [self.view addSubview:self.adBanner];
+	if (! self.hideAdvertising)
+		[self.view addSubview:self.adBanner];
     [self.view setNeedsLayout];
 
     [self startKeyboardAutoAdjusting];
@@ -79,7 +90,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-    [self.adBanner removeFromSuperview];
+    [_adBanner removeFromSuperview];
 }
 
 - (void)viewDidLayoutSubviews
@@ -188,6 +199,40 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 		[self.view setNeedsLayout];
 		[self.view layoutIfNeeded];
 	}];
+}
+
+- (void)setHideAdvertising:(BOOL)hideAdvertising
+{
+	if (! _hideAdvertising && hideAdvertising)
+	{
+		ADBannerView *oldAdBanner = _adBanner;
+		_adBanner = nil;
+		
+		if (oldAdBanner.bannerLoaded)
+			[UIView animateWithDuration:0.25f animations:^
+			{
+				[self.view setNeedsLayout];
+				[self.view layoutIfNeeded];
+				oldAdBanner.frame = (CGRect){ CGPointMake(0.0f, CGRectGetMaxY(self.contentController.view.frame)), oldAdBanner.frame.size };
+			} completion:^(BOOL finished)
+			{
+				[oldAdBanner removeFromSuperview];
+			}];
+		else
+			[oldAdBanner removeFromSuperview];
+	}
+	else if (_hideAdvertising && ! hideAdvertising)
+	{
+		[self.view addSubview:self.adBanner];
+		[self.view setNeedsLayout];
+	}
+	_hideAdvertising = hideAdvertising;
+}
+
+- (void)hideAdvertisingWithPurchasedProduct:(NSNotification *)notification
+{
+	if ([[notification.userInfo valueForKey:@"productIdentifier"] isEqualToString:self.hideAdvertisingIAPProductIdentifier])
+		[self setHideAdvertising:YES];
 }
 
 @end
