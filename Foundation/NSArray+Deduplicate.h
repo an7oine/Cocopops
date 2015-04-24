@@ -11,5 +11,6 @@
 @interface NSArray (Deduplicate)
 
 - (NSArray *)arrayByRemovingDuplicates;
+- (NSArray *)arrayByRemovingAdjacentDuplicates;
 
 @end

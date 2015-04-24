@@ -34,6 +34,13 @@
 	});
 }
 
++ (void **)duplicateSortedPointers:(void **)pointers count:(size_t)count
+{
+	void **duplicatedPointers = malloc(sizeof (void *) * count);
+	memcpy(duplicatedPointers, pointers, sizeof (void *) * count);
+	return duplicatedPointers;
+}
+
 + (BOOL)sortedPointers:(void **)pointers count:(size_t)count containObject:(id)obj
 {
 	size_t i=0;

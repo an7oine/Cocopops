@@ -15,6 +15,9 @@
 // return by reference
 - (void)combineWithSortedPointers:(void ***)pointers count:(size_t *)count;
 
+// 'malloc' a new array, fill it with the given pointers, then return the copy
++ (void **)duplicateSortedPointers:(void **)pointers count:(size_t)count;
+
 // check whether a given object is pointed to within the given (__bridge void *) pointers
 + (BOOL)sortedPointers:(void **)pointers count:(size_t)count containObject:(id)obj;
 

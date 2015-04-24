@@ -19,4 +19,14 @@
 	return result;
 }
 
+- (NSArray *)arrayByRemovingAdjacentDuplicates
+{
+	NSMutableArray *result = [NSMutableArray new];
+	id lastObj = nil;
+	for (id obj in self)
+		if (lastObj != obj)
+			[result addObject:(lastObj = obj)];
+	return result;
+}
+
 @end
