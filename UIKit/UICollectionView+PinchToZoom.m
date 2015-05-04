@@ -57,14 +57,19 @@
 
 	pinchRecognizer.factors = doubleTapRecognizer.factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
 
+	NSAssert(minimumFactor <= maximumFactor, @"Invalid zoom limits: [%.3f %.3f] ", minimumFactor, maximumFactor);
 	if (minimumFactor > 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:minimumFactor];
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:minimumFactor gestureFinished:YES];
 		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 	}
 	else if (maximumFactor < 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:maximumFactor];
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:maximumFactor gestureFinished:YES];
 		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 	}
 }
