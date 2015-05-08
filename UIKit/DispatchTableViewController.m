@@ -45,4 +45,9 @@
 	return row;
 }
 
+- (CGSize)preferredContentSize
+{
+	return CGSizeMake(MIN(UIScreen.mainScreen.bounds.size.width, UIScreen.mainScreen.bounds.size.width), [self.tableView contentSize].height);
+}
+
 @end
