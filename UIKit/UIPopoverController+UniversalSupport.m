@@ -6,8 +6,7 @@
 
 // Graphical properties of popovers on the iPhone:
 
-#define EDGE_INSET 14.0f	// inset from screen edges
-#define SPACE_INSET 100.0f	// additional inset along whichever screen axis is longer
+#define SPACE_INSET 80.0f	// additional inset along whichever screen axis is longer
 
 #define ARROW_SIZE 10.0f	// height (width) of the arrow when pointing up or down (left or right)
 #define CORNER_SIZE 6.0f	// height and width of the rounded corners applied to popover content
@@ -54,6 +53,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 + (BOOL)_popoversDisabled { return NO; } // override super's behaviour
 
+@synthesize popoverVisible=_popoverVisible;
 
 #pragma mark - View setup
 
@@ -70,8 +70,13 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	// get the target on-screen rect, or whole screen if no target view was specified
 	CGRect targetRect = _showFromView? [_backgroundView convertRect:_showFromRect fromView:_showFromView] : _backgroundView.bounds;
 
+	CGFloat top = (self.popoverLayoutMargins.top ?: 10.0f) + UIApplication.sharedApplication.statusBarFrame.size.height;
+	CGFloat bottom = self.popoverLayoutMargins.bottom ?: 10.0f;
+	CGFloat left = self.popoverLayoutMargins.left ?: 10.0f;
+	CGFloat right = self.popoverLayoutMargins.right ?: 10.0f;
+	
 	// determine maximal popover size (as bounded screen real estate)
-	CGSize popoverSize = CGSizeMake(_backgroundView.bounds.size.width - 2*EDGE_INSET, _backgroundView.bounds.size.height - 2*EDGE_INSET);
+	CGSize popoverSize = CGSizeMake(_backgroundView.bounds.size.width - left-right, _backgroundView.bounds.size.height - top-bottom);
 	// reserve space for cancellation taps along the larger axis
 	if (popoverSize.width > popoverSize.height)
 		popoverSize.width -= 2*SPACE_INSET;
@@ -100,13 +105,13 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// present popover in the bottom of the screen, if it fits
 	if ((_permittedArrowDirections & UIPopoverArrowDirectionUp)
-		&& CGRectGetMaxY(targetRect) + ARROW_SIZE + minimumPopoverSize.height + EDGE_INSET <= CGRectGetMaxY(_backgroundView.bounds)
-		&& CGRectGetMidX(targetRect)-ARROW_SIZE-CORNER_SIZE-EDGE_INSET >= CGRectGetMinX(_backgroundView.bounds)
-		&& CGRectGetMidX(targetRect)+ARROW_SIZE+CORNER_SIZE+EDGE_INSET <= CGRectGetMaxX(_backgroundView.bounds))
+		&& CGRectGetMaxY(targetRect) + ARROW_SIZE + minimumPopoverSize.height + bottom <= CGRectGetMaxY(_backgroundView.bounds)
+		&& CGRectGetMidX(targetRect) - ARROW_SIZE - CORNER_SIZE-left >= CGRectGetMinX(_backgroundView.bounds)
+		&& CGRectGetMidX(targetRect) + ARROW_SIZE + CORNER_SIZE+right <= CGRectGetMaxX(_backgroundView.bounds))
 	{
 		// align the popover horizontally with targetRect (directly below it)
-		popoverSize.height = MIN(popoverSize.height, CGRectGetHeight(_backgroundView.bounds) - EDGE_INSET - CGRectGetMaxY(targetRect) - ARROW_SIZE);
-		popoverFrame.origin.x = MIN(CGRectGetMaxX(_backgroundView.bounds) - EDGE_INSET - popoverSize.width, MAX(EDGE_INSET, CGRectGetMidX(targetRect)-0.5f*popoverSize.width));
+		popoverSize.height = MIN(popoverSize.height, CGRectGetHeight(_backgroundView.bounds) - bottom - CGRectGetMaxY(targetRect) - ARROW_SIZE);
+		popoverFrame.origin.x = MIN(CGRectGetMaxX(_backgroundView.bounds) - right - popoverSize.width, MAX(left, CGRectGetMidX(targetRect)-0.5f*popoverSize.width));
 		popoverFrame.origin.y = CGRectGetMaxY(targetRect) + ARROW_SIZE;
 		popoverFrame.size = popoverSize;
 
@@ -118,13 +123,13 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// present popover in the top of the screen, if it fits
 	else if ((_permittedArrowDirections & UIPopoverArrowDirectionDown)
-		&& CGRectGetMinY(targetRect) - ARROW_SIZE - minimumPopoverSize.height - EDGE_INSET >= CGRectGetMinY(_backgroundView.bounds)
-		&& CGRectGetMidX(targetRect)-ARROW_SIZE-CORNER_SIZE-EDGE_INSET >= CGRectGetMinX(_backgroundView.bounds)
-		&& CGRectGetMidX(targetRect)+ARROW_SIZE+CORNER_SIZE+EDGE_INSET <= CGRectGetMaxX(_backgroundView.bounds))
+		&& CGRectGetMinY(targetRect) - ARROW_SIZE - minimumPopoverSize.height - top >= CGRectGetMinY(_backgroundView.bounds)
+		&& CGRectGetMidX(targetRect) - ARROW_SIZE - CORNER_SIZE-left >= CGRectGetMinX(_backgroundView.bounds)
+		&& CGRectGetMidX(targetRect) + ARROW_SIZE + CORNER_SIZE+right <= CGRectGetMaxX(_backgroundView.bounds))
 	{
 		// align the popover horizontally with targetRect (directly above it)
-		popoverSize.height = MIN(popoverSize.height, CGRectGetMinY(targetRect) - ARROW_SIZE - EDGE_INSET);
-		popoverFrame.origin.x = MIN(CGRectGetMaxX(_backgroundView.bounds) - EDGE_INSET - popoverSize.width, MAX(EDGE_INSET, CGRectGetMidX(targetRect)-0.5f*popoverSize.width));
+		popoverSize.height = MIN(popoverSize.height, CGRectGetMinY(targetRect) - ARROW_SIZE - top);
+		popoverFrame.origin.x = MIN(CGRectGetMaxX(_backgroundView.bounds) - right - popoverSize.width, MAX(left, CGRectGetMidX(targetRect)-0.5f*popoverSize.width));
 		popoverFrame.origin.y = CGRectGetMinY(targetRect) - ARROW_SIZE - popoverSize.height;
 		popoverFrame.size = popoverSize;
 
@@ -136,12 +141,12 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// present popover on the right side of the screen, if it fits
 	else if ((_permittedArrowDirections & UIPopoverArrowDirectionLeft)
-		&& CGRectGetMaxX(targetRect) + ARROW_SIZE + minimumPopoverSize.width + EDGE_INSET <= CGRectGetMaxX(_backgroundView.bounds))
+		&& CGRectGetMaxX(targetRect) + ARROW_SIZE + minimumPopoverSize.width + right <= CGRectGetMaxX(_backgroundView.bounds))
 	{
 		// align the popover vertically with targetRect (directly on its right)
-		popoverSize.width = MIN(popoverSize.width, CGRectGetWidth(_backgroundView.bounds) - EDGE_INSET - CGRectGetMaxX(targetRect) - ARROW_SIZE);
+		popoverSize.width = MIN(popoverSize.width, CGRectGetWidth(_backgroundView.bounds) - left - CGRectGetMaxX(targetRect) - ARROW_SIZE);
 		popoverFrame.origin.x = CGRectGetMaxX(targetRect) + ARROW_SIZE;
-		popoverFrame.origin.y = MIN(CGRectGetMaxY(_backgroundView.bounds) - EDGE_INSET - popoverSize.height, MAX(EDGE_INSET, CGRectGetMidY(targetRect)-0.5f*popoverSize.height));
+		popoverFrame.origin.y = MIN(CGRectGetMaxY(_backgroundView.bounds) - bottom - popoverSize.height, MAX(top, CGRectGetMidY(targetRect)-0.5f*popoverSize.height));
 		popoverFrame.size = popoverSize;
 
 		arrow0 = CGPointMake(CGRectGetMaxX(targetRect), CGRectGetMidY(targetRect));
@@ -152,12 +157,12 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// present popover on the left side of the screen, if it fits
 	else if ((_permittedArrowDirections & UIPopoverArrowDirectionRight)
-		&& CGRectGetMinX(targetRect) - ARROW_SIZE - minimumPopoverSize.width - EDGE_INSET >= CGRectGetMinX(_backgroundView.bounds))
+		&& CGRectGetMinX(targetRect) - ARROW_SIZE - minimumPopoverSize.width - left >= CGRectGetMinX(_backgroundView.bounds))
 	{
 		// align the popover vertically with targetRect (directly on its left)
-		popoverSize.width = MIN(popoverSize.width, CGRectGetMinX(targetRect) - ARROW_SIZE - EDGE_INSET);
+		popoverSize.width = MIN(popoverSize.width, CGRectGetMinX(targetRect) - ARROW_SIZE - left);
 		popoverFrame.origin.x = CGRectGetMinX(targetRect) - ARROW_SIZE - popoverSize.width;
-		popoverFrame.origin.y = MIN(CGRectGetMaxY(_backgroundView.bounds) - EDGE_INSET - popoverSize.height, MAX(EDGE_INSET, CGRectGetMidY(targetRect)-0.5f*popoverSize.height));
+		popoverFrame.origin.y = MIN(CGRectGetMaxY(_backgroundView.bounds) - bottom - popoverSize.height, MAX(top, CGRectGetMidY(targetRect)-0.5f*popoverSize.height));
 		popoverFrame.size = popoverSize;
 
 		arrow0 = CGPointMake(CGRectGetMinX(targetRect), CGRectGetMidY(targetRect));
@@ -255,9 +260,9 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	UITapGestureRecognizer *recogniser = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(backgroundViewTapped:)];
 	recogniser.cancelsTouchesInView = NO;
 
-	_backgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+	_backgroundView = [[self.popoverBackgroundViewClass ?: UIView.class alloc] initWithFrame:CGRectZero];
 	[_backgroundView addGestureRecognizer:recogniser];
-	_backgroundView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.15f];
+	_backgroundView.backgroundColor = self.backgroundColor ?: [UIColor colorWithWhite:0.0f alpha:0.15f];
 
 	_popoverView = [[UIView alloc] initWithFrame:CGRectZero];
 	_popoverView.opaque = NO;
@@ -278,6 +283,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	// setup views & frames
 	[self setupViewHierarchy];
 	[self setupViewFrames];
+	_popoverVisible = YES;
 
 	[self.contentViewController viewWillAppear:YES];
 
@@ -345,6 +351,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 				 [_backgroundView removeFromSuperview];
 				 _backgroundView = nil;
 				 _popoverView = nil;
+				 _popoverVisible = NO;
 			 }];
 		}
 		else
@@ -353,6 +360,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 			[_backgroundView removeFromSuperview];
 			_backgroundView = nil;
 			_popoverView = nil;
+			_popoverVisible = NO;
 		}
 	}
 }
