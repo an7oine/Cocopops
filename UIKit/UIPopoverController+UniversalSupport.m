@@ -144,7 +144,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		&& CGRectGetMaxX(targetRect) + ARROW_SIZE + minimumPopoverSize.width + right <= CGRectGetMaxX(_backgroundView.bounds))
 	{
 		// align the popover vertically with targetRect (directly on its right)
-		popoverSize.width = MIN(popoverSize.width, CGRectGetWidth(_backgroundView.bounds) - left - CGRectGetMaxX(targetRect) - ARROW_SIZE);
+		popoverSize.width = MIN(popoverSize.width, CGRectGetWidth(_backgroundView.bounds) - right - CGRectGetMaxX(targetRect) - ARROW_SIZE);
 		popoverFrame.origin.x = CGRectGetMaxX(targetRect) + ARROW_SIZE;
 		popoverFrame.origin.y = MIN(CGRectGetMaxY(_backgroundView.bounds) - bottom - popoverSize.height, MAX(top, CGRectGetMidY(targetRect)-0.5f*popoverSize.height));
 		popoverFrame.size = popoverSize;
@@ -174,7 +174,6 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	// otherwise, present centered on screen (without arrow)
 	else
 	{
-		popoverFrame = CGRectMake(CGRectGetMidX(_backgroundView.bounds), CGRectGetMidY(_backgroundView.bounds), 0.0f, 0.0f);
 		popoverFrame = CGRectInset((CGRect){ CGPointMake(CGRectGetMidX(_backgroundView.bounds), CGRectGetMidY(_backgroundView.bounds)), CGSizeZero }, -0.5f*popoverSize.width, -0.5f*popoverSize.height);
 		showArrow = NO;
 	}
@@ -200,6 +199,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		_arrowShapeLayer.path = NULL;
 
 
+	// set a content mask with rounded corners
 	CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
 	CGPathRef roundedRectPath = CGPathCreateWithRoundedRect(_popoverView.bounds, CORNER_SIZE, CORNER_SIZE, NULL);
 	maskLayer.frame = _popoverView.bounds;
