@@ -24,7 +24,7 @@
 	NSMutableArray *result = [NSMutableArray new];
 	id lastObj = nil;
 	for (id obj in self)
-		if (lastObj != obj)
+        if (! [lastObj isEqual:obj])
 			[result addObject:(lastObj = obj)];
 	return result;
 }
