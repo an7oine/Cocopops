@@ -55,27 +55,57 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 @synthesize popoverVisible=_popoverVisible;
 
+
+#pragma mark - Initialising
+
+- (instancetype)initWithContentViewController:(UIViewController *)viewController
+{
+	if (! (self = [super initWithContentViewController:viewController]))
+		return nil;
+	self.popoverLayoutMargins = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
+	return self;
+}
+
+
 #pragma mark - View setup
+
+- (void)setupViewHierarchy
+{
+	_arrowShapeLayer = [[CAShapeLayer alloc] init];
+	[_backgroundView.layer addSublayer:_arrowShapeLayer];
+
+	[_popoverView addSubview:self.contentViewController.view];
+	[_backgroundView addSubview:_popoverView];
+
+	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending)
+		// attach onto an existing viewController's view on iOS 7
+		[UIApplication.sharedApplication.keyWindow.rootViewController.view addSubview:_backgroundView];
+	else
+		// attach onto the application window on iOS 8
+		[UIApplication.sharedApplication.keyWindow addSubview:_backgroundView];
+}
 
 - (void)setupViewFrames
 {
-	// get screen size
+	// get screen frame, exclude status bar frame
 	CGRect screen = UIScreen.mainScreen.bounds;
+	CGRect statusBar = UIApplication.sharedApplication.statusBarFrame;
+
 	// swap width & height when orientation is landscape, but only on iOS 7
 	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending && _deviceOrientation != UIDeviceOrientationPortrait)
-		_backgroundView.frame = (CGRect){ screen.origin, CGSizeMake(screen.size.height, screen.size.width) };
-	else
-		_backgroundView.frame = screen;
+	{
+		screen = (CGRect){ screen.origin, CGSizeMake(screen.size.height, screen.size.width) };
+		statusBar = (CGRect){ statusBar.origin, CGSizeMake(statusBar.size.height, statusBar.size.width) };
+	}
 
-	// get the target on-screen rect, or whole screen if no target view was specified
-	CGRect targetRect = _showFromView? [_backgroundView convertRect:_showFromRect fromView:_showFromView] : _backgroundView.bounds;
+	_backgroundView.frame = screen;
 
-	CGFloat top = (self.popoverLayoutMargins.top ?: 10.0f) + UIApplication.sharedApplication.statusBarFrame.size.height;
-	CGFloat bottom = self.popoverLayoutMargins.bottom ?: 10.0f;
-	CGFloat left = self.popoverLayoutMargins.left ?: 10.0f;
-	CGFloat right = self.popoverLayoutMargins.right ?: 10.0f;
+	CGFloat top = self.popoverLayoutMargins.top + statusBar.size.height;
+	CGFloat bottom = self.popoverLayoutMargins.bottom;
+	CGFloat left = self.popoverLayoutMargins.left;
+	CGFloat right = self.popoverLayoutMargins.right;
 	
-	// determine maximal popover size (as bounded screen real estate)
+	// determine maximal popover size (as bounded by screen real estate)
 	CGSize popoverSize = CGSizeMake(_backgroundView.bounds.size.width - left-right, _backgroundView.bounds.size.height - top-bottom);
 	// reserve space for cancellation taps along the larger axis
 	if (popoverSize.width > popoverSize.height)
@@ -97,6 +127,9 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	}
 	else
 		NSLog(@"%@: contentViewController reports a preferredContentSize of %@", NSStringFromClass(self.class), NSStringFromCGSize(self.contentViewController.preferredContentSize));
+
+	// target a specific object on screen, or whole screen if none was specified
+	CGRect targetRect = _showFromView? [_backgroundView convertRect:_showFromRect fromView:_showFromView] : _backgroundView.bounds;
 
 	// determine presentation frame of the popover and corner points of the arrow symbol, if appropriate
 	CGRect popoverFrame;
@@ -206,22 +239,6 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	maskLayer.path = roundedRectPath;
 	CGPathRelease(roundedRectPath);
 	_popoverView.layer.mask = maskLayer;
-}
-
-- (void)setupViewHierarchy
-{
-	_arrowShapeLayer = [[CAShapeLayer alloc] init];
-	[_backgroundView.layer addSublayer:_arrowShapeLayer];
-
-	[_popoverView addSubview:self.contentViewController.view];
-	[_backgroundView addSubview:_popoverView];
-
-	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending)
-		// attach onto an existing viewController's view on iOS 7
-		[UIApplication.sharedApplication.keyWindow.rootViewController.view addSubview:_backgroundView];
-	else
-		// attach onto the application window on iOS 8
-		[UIApplication.sharedApplication.keyWindow addSubview:_backgroundView];
 }
 
 

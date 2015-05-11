@@ -43,6 +43,7 @@ static InAppPurchaseController *_sharedController;
 		SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productIdentifiers]];
 		request.delegate = self;
 		[request start];
+		NSLog(@"%@ : product request started", NSStringFromClass(self.class));
 	}
 
 	[SKPaymentQueue.defaultQueue addTransactionObserver:self];
@@ -115,6 +116,7 @@ static InAppPurchaseController *_sharedController;
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
+	NSLog(@"%@ : product request finished", NSStringFromClass(self.class));
 	for (SKProduct *product in response.products)
 	{
 		_availableProducts[product.productIdentifier] = product;

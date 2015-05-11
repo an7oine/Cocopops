@@ -13,6 +13,14 @@
 	_blocks = [NSMutableDictionary new];
 	return self;
 }
+- (instancetype)initWithStyle:(UITableViewStyle)style
+{
+	if (! (self = [super initWithStyle:style]))
+		return nil;
+	_choices = [NSMutableArray new];
+	_blocks = [NSMutableDictionary new];
+	return self;
+}
 - (void)loadView
 {
 	self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
