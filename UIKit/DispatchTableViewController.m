@@ -43,6 +43,7 @@
 	void (^block)(NSInteger rowIndex) = self.blocks[@( indexPath.row )];
 	if (block)
 		block(indexPath.row);
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (NSInteger)addChoiceWithTitle:(NSString *)title block:(void (^)(NSInteger))block

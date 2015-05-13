@@ -8,6 +8,17 @@
 - (void)identifySelfUsingBlock:(void (^)(id firstResponder))block { block(self); }
 @end
 
+@implementation UICollectionView (IdentifySelfUsingBlock)
+- (void)identifySelfUsingBlock:(void (^)(id firstResponder))block
+{
+	UICollectionViewCell *selectedCell = [self cellForItemAtIndexPath:self.indexPathsForSelectedItems.firstObject];
+	if (selectedCell.isFirstResponder)
+		block(selectedCell);
+	else if (self.isFirstResponder)
+		block(self);
+}
+@end
+
 @implementation UIApplication (GetFirstResponder)
 
 - (UIResponder *)firstResponder

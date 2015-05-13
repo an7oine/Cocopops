@@ -9,7 +9,7 @@
 
 // Graphical properties of popovers displayed on the iPhone:
 
-#define MINIMUM_SIZE 0.75f	// minimum size of the displayed popover, fraction of each dimension
+#define MINIMUM_SIZE 0.8f	// minimum size of the displayed popover, fraction of each dimension
 #define ARROW_SIZE 10.0f	// height (width) of the arrow when pointing up or down (left or right)
 #define CORNER_SIZE 6.0f	// height and width of the rounded corners applied to popover content
 
@@ -41,6 +41,8 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 @implementation PhonePopoverController
 {
+	id _retainedSelf;
+
 	UIView *_popoverView, *_backgroundView;
 
 	CAShapeLayer *_arrowShapeLayer;
@@ -172,6 +174,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		inputViewSize = CGSizeMake(inputViewSize.height, inputViewSize.width);
 	}
 	_backgroundView.frame = screen;
+	BOOL landscape = screen.size.width > screen.size.height;
 
 	// get the margin width on each screen edge
 	CGFloat top = self.popoverLayoutMargins.top + statusBarSize.height;
@@ -182,39 +185,27 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	// determine usable on-screen area, preferred popover size, and minimum required popover size
 	CGRect usable = CGRectMake(CGRectGetMinX(_backgroundView.bounds)+left, CGRectGetMinY(_backgroundView.bounds)+top, CGRectGetWidth(_backgroundView.bounds)-left-right, CGRectGetHeight(_backgroundView.bounds)-top-bottom);
 	CGRect popover = (CGRect){ CGPointZero, self.contentViewController.preferredContentSize };
-	if (popover.size.width == 0.0f)
+	if (popover.size.width == 0.0f || popover.size.width > usable.size.width)
 		popover.size.width = usable.size.width;
-	if (popover.size.height == 0.0f)
+	if (popover.size.height == 0.0f || popover.size.height > usable.size.height)
 		popover.size.height = usable.size.height;
-	CGSize minimumSize = CGSizeMake(MINIMUM_SIZE * popover.size.width, MINIMUM_SIZE * popover.size.height);
 
-	// target a specific object on screen, or whole screen if none was specified
+	// determine a minimum size for the presented popover
+	CGSize minimumSize = CGSizeMake(MINIMUM_SIZE * popover.size.width, MINIMUM_SIZE * popover.size.height);
+	if (landscape)
+		minimumSize.width *= 0.5f;
+	else
+		minimumSize.height *= 0.5f;
+
+	// target a specific rectangle on screen, or whole screen if none was specified
 	CGRect target = _showFromView? [_backgroundView convertRect:_showFromRect fromView:_showFromView] : _backgroundView.bounds;
 
 	// determine which direction the arrow should point, if at all
 	UIPopoverArrowDirection dir = UIPopoverArrowDirectionUnknown;
 	CGRect arrow = CGRectMake(0.0f, 0.0f, 2*ARROW_SIZE, 2*ARROW_SIZE);
-	if ((_permittedArrowDirections & UIPopoverArrowDirectionLeft)
-		&& CGRectGetMaxX(target) + ARROW_SIZE + minimumSize.width <= CGRectGetMaxX(usable))
-	{
-		popover = CGRectOffset(popover, CGRectGetMaxX(target)+ARROW_SIZE, CGRectGetMidY(target)-0.5f*popover.size.height);
-		popover = [self.class adjustVertically:popover toBounds:usable];
 
-		dir = UIPopoverArrowDirectionLeft;
-		arrow.origin = CGPointMake(CGRectGetMaxX(target), CGRectGetMidY(target)-ARROW_SIZE);
-	}
-
-	else if ((_permittedArrowDirections & UIPopoverArrowDirectionRight)
-		&& CGRectGetMinX(target) - ARROW_SIZE - minimumSize.width >= CGRectGetMinX(usable))
-	{
-		popover = CGRectOffset(popover, CGRectGetMinX(target)-ARROW_SIZE-popover.size.width, CGRectGetMidY(target)-0.5f*popover.size.height);
-		popover = [self.class adjustVertically:popover toBounds:usable];
-
-		dir = UIPopoverArrowDirectionRight;
-		arrow.origin = CGPointMake(CGRectGetMinX(target)-2*ARROW_SIZE, CGRectGetMidY(target)-ARROW_SIZE);
-	}
-
-	else if ((_permittedArrowDirections & UIPopoverArrowDirectionUp)
+	if (landscape
+		&& (_permittedArrowDirections & UIPopoverArrowDirectionUp)
 		&& CGRectGetMaxY(target) + ARROW_SIZE + minimumSize.height <= CGRectGetMaxY(usable))
 	{
 		popover = CGRectOffset(popover, CGRectGetMidX(target)-0.5f*popover.size.width, CGRectGetMaxY(target)+ARROW_SIZE);
@@ -224,7 +215,50 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		arrow.origin = CGPointMake(CGRectGetMidX(target)-ARROW_SIZE, CGRectGetMaxY(target));
 	}
 
-	else if ((_permittedArrowDirections & UIPopoverArrowDirectionDown)
+	else if (landscape
+		&& (_permittedArrowDirections & UIPopoverArrowDirectionDown)
+		&& CGRectGetMinY(target) - ARROW_SIZE - minimumSize.height >= CGRectGetMinY(usable))
+	{
+		popover = CGRectOffset(popover, CGRectGetMidX(target)-0.5f*popover.size.width, CGRectGetMinY(target)-ARROW_SIZE-popover.size.height);
+		popover = [self.class adjustHorizontally:popover toBounds:usable];
+
+		dir = UIPopoverArrowDirectionDown;
+		arrow.origin = CGPointMake(CGRectGetMidX(target)-ARROW_SIZE, CGRectGetMinY(target)-2*ARROW_SIZE);
+	}
+
+	else if ((_permittedArrowDirections & UIPopoverArrowDirectionLeft)
+			 && CGRectGetMaxX(target) + ARROW_SIZE + minimumSize.width <= CGRectGetMaxX(usable))
+	{
+		popover = CGRectOffset(popover, CGRectGetMaxX(target)+ARROW_SIZE, CGRectGetMidY(target)-0.5f*popover.size.height);
+		popover = [self.class adjustVertically:popover toBounds:usable];
+
+		dir = UIPopoverArrowDirectionLeft;
+		arrow.origin = CGPointMake(CGRectGetMaxX(target), CGRectGetMidY(target)-ARROW_SIZE);
+	}
+
+	else if ((_permittedArrowDirections & UIPopoverArrowDirectionRight)
+			 && CGRectGetMinX(target) - ARROW_SIZE - minimumSize.width >= CGRectGetMinX(usable))
+	{
+		popover = CGRectOffset(popover, CGRectGetMinX(target)-ARROW_SIZE-popover.size.width, CGRectGetMidY(target)-0.5f*popover.size.height);
+		popover = [self.class adjustVertically:popover toBounds:usable];
+
+		dir = UIPopoverArrowDirectionRight;
+		arrow.origin = CGPointMake(CGRectGetMinX(target)-2*ARROW_SIZE, CGRectGetMidY(target)-ARROW_SIZE);
+	}
+
+	else if (! landscape
+		&& (_permittedArrowDirections & UIPopoverArrowDirectionUp)
+		&& CGRectGetMaxY(target) + ARROW_SIZE + minimumSize.height <= CGRectGetMaxY(usable))
+	{
+		popover = CGRectOffset(popover, CGRectGetMidX(target)-0.5f*popover.size.width, CGRectGetMaxY(target)+ARROW_SIZE);
+		popover = [self.class adjustHorizontally:popover toBounds:usable];
+
+		dir = UIPopoverArrowDirectionUp;
+		arrow.origin = CGPointMake(CGRectGetMidX(target)-ARROW_SIZE, CGRectGetMaxY(target));
+	}
+
+	else if (! landscape
+		&& (_permittedArrowDirections & UIPopoverArrowDirectionDown)
 		&& CGRectGetMinY(target) - ARROW_SIZE - minimumSize.height >= CGRectGetMinY(usable))
 	{
 		popover = CGRectOffset(popover, CGRectGetMidX(target)-0.5f*popover.size.width, CGRectGetMinY(target)-ARROW_SIZE-popover.size.height);
@@ -347,6 +381,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	[self setupViewHierarchy];
 	[self setupViewFramesFirstTime:YES];
 	_popoverVisible = YES;
+	_retainedSelf = self;
 
 	[self.contentViewController viewWillAppear:YES];
 
@@ -380,7 +415,8 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	_showFromView = [item valueForKey:@"view"];
 	_showFromRect = _showFromView.bounds;
 	_permittedArrowDirections = arrowDirections;
-	self.passthroughViews = [@[ _showFromView.superview, ] arrayByAddingObjectsFromArray:self.passthroughViews];
+	if (_showFromView)
+		self.passthroughViews = [@[ _showFromView.superview, ] arrayByAddingObjectsFromArray:self.passthroughViews];
 	_fromBarButtonItem = YES;
 	[self presentPopoverAnimated:animated];
 }
@@ -419,6 +455,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 				 _popoverView = nil;
 				 _popoverVisible = NO;
 				 _popoverArrowDirection = UIPopoverArrowDirectionUnknown;
+				 _retainedSelf = nil;
 			 }];
 		}
 		else
@@ -429,6 +466,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 			_popoverView = nil;
 			_popoverVisible = NO;
 			_popoverArrowDirection = UIPopoverArrowDirectionUnknown;
+			_retainedSelf = nil;
 		}
 	}
 }
