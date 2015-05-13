@@ -62,6 +62,12 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 @synthesize popoverLayoutMargins=_popoverLayoutMargins;
 @synthesize popoverVisible=_popoverVisible;
 @synthesize popoverArrowDirection=_popoverArrowDirection;
+@synthesize popoverContentSize=_popoverContentSize;
+
+- (CGSize)popoverContentSize
+{
+	return _popoverContentSize.width > 0.0f && _popoverContentSize.height > 0.0f? _popoverContentSize : self.contentViewController.preferredContentSize;
+}
 
 
 #pragma mark - Initialising
@@ -184,7 +190,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// determine usable on-screen area, preferred popover size, and minimum required popover size
 	CGRect usable = CGRectMake(CGRectGetMinX(_backgroundView.bounds)+left, CGRectGetMinY(_backgroundView.bounds)+top, CGRectGetWidth(_backgroundView.bounds)-left-right, CGRectGetHeight(_backgroundView.bounds)-top-bottom);
-	CGRect popover = (CGRect){ CGPointZero, self.contentViewController.preferredContentSize };
+	CGRect popover = (CGRect){ CGPointZero, self.popoverContentSize };
 	if (popover.size.width == 0.0f || popover.size.width > usable.size.width)
 		popover.size.width = usable.size.width;
 	if (popover.size.height == 0.0f || popover.size.height > usable.size.height)

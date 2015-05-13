@@ -10,6 +10,8 @@
 	if (! (self = [super init]))
 		return nil;
 	_choices = [NSMutableArray new];
+	_headers = [NSMutableArray new];
+	_footers = [NSMutableArray new];
 	_blocks = [NSMutableDictionary new];
 	return self;
 }
@@ -18,6 +20,8 @@
 	if (! (self = [super initWithStyle:style]))
 		return nil;
 	_choices = [NSMutableArray new];
+	_headers = [NSMutableArray new];
+	_footers = [NSMutableArray new];
 	_blocks = [NSMutableDictionary new];
 	return self;
 }
@@ -30,27 +34,50 @@
 	self.view = self.tableView;
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView { return 1; }
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section { return _choices.count; }
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView { return _choices.count; }
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section { return [_choices[section] count]; }
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section { return _headers.count > section? _headers[section] : nil; }
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section { return _footers.count > section? _footers[section] : nil; }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"PlainCell"];
-	cell.textLabel.text = _choices[indexPath.row];
+	cell.textLabel.text = _choices[indexPath.section][indexPath.row];
 	return cell;
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	void (^block)(NSInteger rowIndex) = self.blocks[@( indexPath.row )];
+	void (^block)(NSInteger rowIndex) = self.blocks[indexPath];
 	if (block)
 		block(indexPath.row);
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
-- (NSInteger)addChoiceWithTitle:(NSString *)title block:(void (^)(NSInteger))block
+- (void)setHeader:(NSString *)header forSection:(NSInteger)section
 {
-	NSInteger row = _choices.count;
-	[_choices addObject:title];
-	_blocks[@( row )] = block;
+	while (_headers.count < section)
+		[_headers addObject:@""];
+	if (_headers.count == section)
+		[_headers addObject:header];
+	else
+		_headers[section] = header;
+}
+- (void)setFooter:(NSString *)footer forSection:(NSInteger)section
+{
+	while (_footers.count < section)
+		[_footers addObject:@""];
+	if (_footers.count == section)
+		[_footers addObject:footer];
+	else
+		_footers[section] = footer;
+}
+
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title block:(void (^)(NSInteger row))block
+{
+	while (_choices.count <= section)
+		[_choices addObject:[NSMutableArray new]];
+	NSInteger row = [_choices[section] count];
+	[_choices[section] addObject:title];
+	_blocks[[NSIndexPath indexPathForRow:row inSection:section]] = block;
 	return row;
 }
 
