@@ -7,6 +7,5 @@
 @interface UIApplication (GetFirstResponder)
 
 - (UIResponder *)firstResponder;
-- (CGSize)inputViewSize;
 
 @end

@@ -28,17 +28,4 @@
 	return result;
 }
 
-- (CGSize)inputViewSize
-{
-	__block CGSize result = CGSizeZero;
-	UIResponder *firstResponder = self.firstResponder;
-	id observer = [NSNotificationCenter.defaultCenter addObserverForName:UIKeyboardDidShowNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
-		result = [note.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
-	}];
-	[firstResponder resignFirstResponder];
-	[firstResponder becomeFirstResponder];
-	[NSNotificationCenter.defaultCenter removeObserver:observer];
-	return result;
-}
-
 @end
