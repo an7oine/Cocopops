@@ -17,6 +17,7 @@
 	self.current = MIN( MAX(1.0f, min), max);
 	return self;
 }
+- (NSString *)description { return [NSString stringWithFormat:@"[%.1f (%.1f) %.1f]", self.min, self.current, self.max]; }
 @end
 
 @interface CollectionZoomPinchGestureRecognizer : UIPinchGestureRecognizer
@@ -107,6 +108,7 @@
 - (IBAction)gotDoubleTapGesture:(CollectionZoomTapGestureRecognizer *)sender
 {
     CGFloat targetFactor = sender.factors.current / sender.factors.max > sender.factors.min / sender.factors.current? sender.factors.min : sender.factors.max;
+	NSAssert(sender.factors.current != 0.0f, @"Invalid current zoom factor: sender.factors == %@", sender.factors);
     CGFloat factor = targetFactor / sender.factors.current;
 	sender.factors.current = targetFactor;
 

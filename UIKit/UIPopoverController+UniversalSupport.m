@@ -102,7 +102,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	return rect;
 }
 
-+ (CGPathRef)createArrowToDirection:(UIPopoverArrowDirection)dir
++ (CGPathRef)newArrowToDirection:(UIPopoverArrowDirection)dir
 {
 	CGMutablePathRef path = CGPathCreateMutable();
 	switch (dir)
@@ -232,7 +232,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	}
 	if ((_permittedArrowDirections & UIPopoverArrowDirectionRight) && leftSpace > bestSpace)
 	{
-		bestSpace = leftSpace;
+		//bestSpace = leftSpace;
 		bestDir = UIPopoverArrowDirectionRight;
 	}
 
@@ -309,7 +309,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		else
 			_arrowShapeLayer.frame = [self.class adjustVertically:arrow toBounds:CGRectInset(usable, 0.0f, CORNER_SIZE)];
 
-		CGPathRef path = [self.class createArrowToDirection:dir];
+		CGPathRef path = [self.class newArrowToDirection:dir];
 		_arrowShapeLayer.path = path;
 		CGPathRelease(path);
 
