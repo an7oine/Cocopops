@@ -13,6 +13,7 @@
 	_headers = [NSMutableArray new];
 	_footers = [NSMutableArray new];
 	_blocks = [NSMutableDictionary new];
+	_accessoryTypes = [NSMutableArray new];
 	return self;
 }
 - (instancetype)initWithStyle:(UITableViewStyle)style
@@ -23,6 +24,7 @@
 	_headers = [NSMutableArray new];
 	_footers = [NSMutableArray new];
 	_blocks = [NSMutableDictionary new];
+	_accessoryTypes = [NSMutableArray new];
 	return self;
 }
 - (void)loadView
@@ -42,6 +44,7 @@
 {
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"PlainCell"];
 	cell.textLabel.text = _choices[indexPath.section][indexPath.row];
+	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
 	return cell;
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -71,19 +74,41 @@
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title block:(void (^)(NSInteger row))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType block:(void (^)(NSInteger row))block
 {
 	while (_choices.count <= section)
+	{
 		[_choices addObject:[NSMutableArray new]];
+		[_accessoryTypes addObject:[NSMutableArray new]];
+	}
 	NSInteger row = [_choices[section] count];
 	[_choices[section] addObject:title];
+	[_accessoryTypes[section] addObject:@( accessoryType )];
 	_blocks[[NSIndexPath indexPathForRow:row inSection:section]] = block;
 	return row;
 }
 
 - (CGSize)preferredContentSize
 {
-	return CGSizeMake(MIN(UIScreen.mainScreen.bounds.size.width, UIScreen.mainScreen.bounds.size.width), [self.tableView contentSize].height);
+	CGFloat pointSize = [[UITableViewCell new].textLabel.font pointSize]; // get the font size from a dummy cell (17.0f)
+
+	CGFloat width = 0.0f, height = 0.0f;
+	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
+	{
+		if (_headers.count > section && [_headers[section] length] > 0)
+			height += [self.tableView rectForHeaderInSection:section].size.height;
+		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
+		{
+			CGFloat textWidth = [_choices[section][item] sizeWithAttributes:@{ NSFontAttributeName : [UIFont systemFontOfSize:pointSize] }].width;
+			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
+			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
+			height += cellSize.height;
+		}
+		if (_footers.count > section && [_footers[section] length] > 0)
+			height += [self.tableView rectForFooterInSection:section].size.height;
+	}
+
+	return CGSizeMake(width, height);
 }
 
 @end

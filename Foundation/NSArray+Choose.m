@@ -12,8 +12,19 @@
 	if (self.count == 0)
 		return block(@[]);
 	NSMutableArray *prependedItems = [NSMutableArray arrayWithArray:self];
-	BOOL result = YES;
 	NSArray *restOfSelf = [self subarrayWithRange:NSMakeRange(1, self.count-1)];
+
+	if ([self.firstObject count] == 0)
+	{
+		prependedItems[0] = NSNull.null;
+		return [restOfSelf chooseWithBlock:^BOOL(NSArray *items)
+	    {
+			[prependedItems replaceObjectsInRange:NSMakeRange(1, self.count-1) withObjectsFromArray:items];
+			return block(prependedItems);
+		}];
+	}
+
+	BOOL result = YES;
 	for (id obj in self.firstObject)
 	{
 		prependedItems[0] = obj;
