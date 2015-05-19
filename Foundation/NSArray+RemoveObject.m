@@ -22,4 +22,11 @@
     return index != NSNotFound? [[self subarrayWithRange:NSMakeRange(0, index)] arrayByAddingObjectsFromArray:[self subarrayWithRange:NSMakeRange(index+1, self.count-index-1)]] : self;
 }
 
+- (NSArray *)arrayByRemovingObjectsInArray:(NSArray *)array
+{
+	NSMutableArray *result = self.mutableCopy;
+	[result removeObjectsInArray:array];
+	return result;
+}
+
 @end

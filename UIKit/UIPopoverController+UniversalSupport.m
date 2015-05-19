@@ -323,7 +323,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// setup content mask with rounded corners
 	CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
-	CGPathRef roundedRectPath = CGPathCreateWithRoundedRect(_popoverView.bounds, CORNER_SIZE, CORNER_SIZE, NULL);
+	CGPathRef roundedRectPath = CGPathCreateWithRoundedRect(_popoverView.bounds, MIN(0.5f*_popoverView.bounds.size.width, CORNER_SIZE), MIN(0.5f*_popoverView.bounds.size.height, CORNER_SIZE), NULL);
 	maskLayer.frame = _popoverView.bounds;
 	maskLayer.path = roundedRectPath;
 	CGPathRelease(roundedRectPath);

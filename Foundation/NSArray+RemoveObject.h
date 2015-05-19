@@ -9,5 +9,6 @@
 - (NSArray *)arrayByRemovingFirstObject;
 - (NSArray *)arrayByRemovingLastObject;
 - (NSArray *)arrayByRemovingObject:(id)object;
+- (NSArray *)arrayByRemovingObjectsInArray:(NSArray *)array;
 
 @end
