@@ -121,6 +121,19 @@
 
 	CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.transform);
 	CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
+
+	if (self.wrapHorizontally)
+	{
+		CGFloat viewportWidth = CGRectGetWidth(self.collectionView.bounds);
+		CGFloat wrapAtWidth = viewportWidth - width;
+		CGFloat wrappingSeparation = (self.south-self.north+1.5f) * self.itemSpacing.height * self.zoomFactor;
+		while (centre.x - 0.5f*width >= wrapAtWidth)
+		{
+			centre.x -= wrapAtWidth;
+			centre.y += wrappingSeparation;
+		}
+	}
+
 	return [self cellFrameWithFrame:CGRectMake(centre.x-0.5f*width, centre.y-0.5f*height, width, height)];
 }
 

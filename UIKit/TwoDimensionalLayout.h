@@ -23,6 +23,9 @@
 // 0-0,0-2,0-4, 1-1,1-3, 2-0,2-2,2-4 / (0,0),(0,1),(0,2), (1,0),(1,1), (2,0),(2,1),(2,2)
 @property (nonatomic) NSInteger adjacentItemsSeparation;
 
+// wrap content at viewport width and separate by this height
+@property (nonatomic) BOOL wrapHorizontally;
+
 // methods to request information about the layout
 - (NSInteger)numberOfSections;
 - (NSInteger)numberOfItemsInSection:(NSInteger)section;
