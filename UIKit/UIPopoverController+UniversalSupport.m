@@ -20,8 +20,11 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	{
 		case UIDeviceOrientationLandscapeLeft: return UIInterfaceOrientationLandscapeLeft;
 		case UIDeviceOrientationLandscapeRight: return UIInterfaceOrientationLandscapeRight;
+		case UIDeviceOrientationFaceUp:
+		case UIDeviceOrientationFaceDown:
 		case UIDeviceOrientationPortrait: return UIInterfaceOrientationPortrait;
 		case UIDeviceOrientationPortraitUpsideDown: return UIInterfaceOrientationPortraitUpsideDown;
+		case UIDeviceOrientationUnknown:
 		default: return UIInterfaceOrientationUnknown;
 	}
 }
@@ -171,7 +174,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	CGSize inputViewSize = UIApplication.sharedApplication.keyboardFrame.size;
 
 	// swap width & height when orientation is landscape, but only on iOS 7
-	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending && _deviceOrientation != UIDeviceOrientationPortrait)
+	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending && _interfaceOrientation != UIInterfaceOrientationPortrait)
 	{
 		screen = (CGRect){ screen.origin, CGSizeMake(screen.size.height, screen.size.width) };
 		statusBarSize = CGSizeMake(statusBarSize.height, statusBarSize.width);
