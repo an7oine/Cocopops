@@ -45,6 +45,7 @@
 @property (nonatomic, weak) id <TwoDLayoutDelegate> delegate;
 
 @property (nonatomic, readonly) CGPoint contentOrigin;
+- (CGRect)frameForRow:(NSInteger)row column:(NSInteger)column;
 
 // override in subclass, if needed
 - (CGAffineTransform)transform;
