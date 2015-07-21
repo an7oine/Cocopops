@@ -25,7 +25,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		case UIDeviceOrientationPortrait: return UIInterfaceOrientationPortrait;
 		case UIDeviceOrientationPortraitUpsideDown: return UIInterfaceOrientationPortraitUpsideDown;
 		case UIDeviceOrientationUnknown:
-		default: return UIInterfaceOrientationUnknown;
+		default: return UIInterfaceOrientationPortrait;
 	}
 }
 
