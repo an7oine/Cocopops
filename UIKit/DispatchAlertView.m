@@ -58,9 +58,24 @@
 	return index;
 }
 
+- (void)setCancelButtonBlock:(void (^)(NSInteger))block
+{
+    self.dispatchAlertDelegate.blockDictionary[@( self.cancelButtonIndex )] = block;
+}
+
 - (void (^)(NSInteger))blockWithButtonIndex:(NSInteger)buttonIndex
 {
 	return self.dispatchAlertDelegate.blockDictionary[@( buttonIndex )];
+}
+
+- (void)dismissWithCancelButton
+{
+    [self dismissWithClickedButtonIndex:self.cancelButtonIndex animated:YES];
+}
+
+- (void)dismissWithFirstOtherButton
+{
+    [self dismissWithClickedButtonIndex:self.cancelButtonIndex+1 animated:YES];
 }
 
 @end
