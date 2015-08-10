@@ -12,8 +12,9 @@
 	_choices = [NSMutableArray new];
 	_headers = [NSMutableArray new];
 	_footers = [NSMutableArray new];
-	_blocks = [NSMutableDictionary new];
 	_accessoryTypes = [NSMutableArray new];
+	_backgroundColours = [NSMutableArray new];
+	_blocks = [NSMutableDictionary new];
 	return self;
 }
 - (instancetype)initWithStyle:(UITableViewStyle)style
@@ -23,8 +24,9 @@
 	_choices = [NSMutableArray new];
 	_headers = [NSMutableArray new];
 	_footers = [NSMutableArray new];
-	_blocks = [NSMutableDictionary new];
 	_accessoryTypes = [NSMutableArray new];
+	_backgroundColours = [NSMutableArray new];
+	_blocks = [NSMutableDictionary new];
 	return self;
 }
 - (void)loadView
@@ -45,6 +47,7 @@
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"PlainCell"];
 	cell.textLabel.text = _choices[indexPath.section][indexPath.row];
 	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
+	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -74,16 +77,18 @@
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType block:(void (^)(NSInteger row))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSInteger row))block
 {
 	while (_choices.count <= section)
 	{
 		[_choices addObject:[NSMutableArray new]];
 		[_accessoryTypes addObject:[NSMutableArray new]];
+		[_backgroundColours addObject:[NSMutableArray new]];
 	}
 	NSInteger row = [_choices[section] count];
 	[_choices[section] addObject:title];
 	[_accessoryTypes[section] addObject:@( accessoryType )];
+	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
 	_blocks[[NSIndexPath indexPathForRow:row inSection:section]] = block;
 	return row;
 }
