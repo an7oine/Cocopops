@@ -5,6 +5,7 @@
 #import <UIKit/UIKit.h>
 
 #define STATIC_BANNER 0
+#define SETCONTENT_SEGUE @"SetContent" // instantiate an AdBannerContentSegue in your Storyboard using this identifier
 
 extern NSString * const BannerViewActionWillBegin;
 extern NSString * const BannerViewActionDidFinish;
@@ -22,7 +23,7 @@ extern NSString * const BannerViewActionDidFinish;
 @interface AdBannerViewController : UIViewController
 @property (nonatomic) BOOL hideAdvertising;
 @property (nonatomic) NSString *hideAdvertisingIAPProductIdentifier; // if set, monitor purchases with this identifier and hide adverts in response
-@property (nonatomic, weak) IBOutlet UIViewController *contentController;
+@property (nonatomic, strong) IBOutlet UIViewController *contentController;
 @end
 
 @interface AdBannerContentSegue : UIStoryboardSegue

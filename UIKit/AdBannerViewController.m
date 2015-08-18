@@ -42,7 +42,8 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 - (void)loadView
 {
-    NSAssert(self.contentController, @"Perform an AdBannerContentSegue before displaying me!");
+    if (! self.contentController)
+        [self performSegueWithIdentifier:SETCONTENT_SEGUE sender:self];
 
     UIView *contentView = [[UIView alloc] initWithFrame:CGRectZero];
 
