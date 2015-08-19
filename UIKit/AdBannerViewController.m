@@ -58,7 +58,11 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 - (void)setHideAdvertisingIAPProductIdentifier:(NSString *)hideAdvertisingIAPProductIdentifier
 {
 	if (hideAdvertisingIAPProductIdentifier)
+	{
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hideAdvertisingWithPurchasedProduct:) name:InAppPurchaseProductPurchased object:nil];
+		if ([InAppPurchaseController.sharedController.purchasedProductIdentifiers containsObject:hideAdvertisingIAPProductIdentifier])
+			[self setHideAdvertising:YES];
+	}
 	_hideAdvertisingIAPProductIdentifier = hideAdvertisingIAPProductIdentifier;
 }
 
