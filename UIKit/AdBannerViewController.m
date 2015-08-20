@@ -21,6 +21,15 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 @synthesize hideAdvertising=_hideAdvertising, hideAdvertisingIAPProductIdentifier=_hideAdvertisingIAPProductIdentifier;
 
+@synthesize contentController=_contentController;
+- (UIViewController *)contentController
+{
+	if (! _contentController)
+        [self performSegueWithIdentifier:SETCONTENT_SEGUE sender:self];
+	NSAssert(_contentController, @"AdBannerVC: content VC not set, and performing segue \"" SETCONTENT_SEGUE "\" failed!");
+	return _contentController;
+}
+
 + (ADBannerView *)adBanner
 {
 #if STATIC_BANNER
@@ -42,9 +51,6 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 - (void)loadView
 {
-    if (! self.contentController)
-        [self performSegueWithIdentifier:SETCONTENT_SEGUE sender:self];
-
     UIView *contentView = [[UIView alloc] initWithFrame:CGRectZero];
 
     [self addChildViewController:self.contentController];
