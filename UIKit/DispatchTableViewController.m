@@ -58,6 +58,16 @@
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
+- (void)clearContent
+{
+    _choices = [NSMutableArray new];
+    _headers = [NSMutableArray new];
+    _footers = [NSMutableArray new];
+    _accessoryTypes = [NSMutableArray new];
+    _backgroundColours = [NSMutableArray new];
+    _blocks = [NSMutableDictionary new];
+}
+
 - (void)setHeader:(NSString *)header forSection:(NSInteger)section
 {
 	while (_headers.count < section)
@@ -95,22 +105,30 @@
 
 - (CGSize)preferredContentSize
 {
-	CGFloat pointSize = [[UITableViewCell new].textLabel.font pointSize]; // get the font size from a dummy cell (17.0f)
+	UIFont *cellFont = [UITableViewCell new].textLabel.font; // get the font from a dummy cell (17.0f point)
 
 	CGFloat width = 0.0f, height = 0.0f;
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
 		if (_headers.count > section && [_headers[section] length] > 0)
+        {
+            CGFloat textWidth = [_headers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
+            width = MAX(width, textWidth);
 			height += [self.tableView rectForHeaderInSection:section].size.height;
+        }
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
 		{
-			CGFloat textWidth = [_choices[section][item] sizeWithAttributes:@{ NSFontAttributeName : [UIFont systemFontOfSize:pointSize] }].width;
+			CGFloat textWidth = [_choices[section][item] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
 			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
 			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
 			height += cellSize.height;
 		}
 		if (_footers.count > section && [_footers[section] length] > 0)
-			height += [self.tableView rectForFooterInSection:section].size.height;
+        {
+            CGFloat textWidth = [_footers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
+            width = MAX(width, textWidth);
+            height += [self.tableView rectForFooterInSection:section].size.height;
+        }
 	}
 
 	return CGSizeMake(width, height);
