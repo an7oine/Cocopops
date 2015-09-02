@@ -54,6 +54,7 @@
 
     CollectionZoomTapGestureRecognizer *doubleTapRecognizer = [[CollectionZoomTapGestureRecognizer alloc] initWithTarget:self action:@selector(gotDoubleTapGesture:)];
     doubleTapRecognizer.numberOfTapsRequired = 2;
+    doubleTapRecognizer.delaysTouchesBegan = YES;
     [self addGestureRecognizer:doubleTapRecognizer];
 
 	pinchRecognizer.factors = doubleTapRecognizer.factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
