@@ -4,6 +4,8 @@
 
 #import <UIKit/UIKit.h>
 
+extern NSString *const DispatchTableViewCellReuseIdentifier; // use this to register a custom subclass or NIB for the dispatch cells
+
 @interface DispatchTableViewController : UITableViewController
 
 @property (nonatomic) NSMutableArray *choices;

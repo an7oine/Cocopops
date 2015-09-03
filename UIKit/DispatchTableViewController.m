@@ -4,6 +4,8 @@
 
 #import "DispatchTableViewController.h"
 
+NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellReuseIdentifier";
+
 @implementation DispatchTableViewController
 - (instancetype)init
 {
@@ -32,7 +34,7 @@
 - (void)loadView
 {
 	self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
-	[self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:@"PlainCell"];
+	[self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
 	self.tableView.delegate = self;
 	self.tableView.dataSource = self;
 	self.view = self.tableView;
@@ -44,7 +46,7 @@
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section { return _footers.count > section? _footers[section] : nil; }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"PlainCell"];
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
 	cell.textLabel.text = _choices[indexPath.section][indexPath.row];
 	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];

@@ -153,6 +153,15 @@
 
 #pragma mark - UICollectionViewLayout methods
 
+- (void)invalidateLayout
+{
+	[super invalidateLayout];
+
+	_layoutAttributes = nil;
+	_collectionViewContentSize = CGSizeZero;
+	_contentOrigin = CGPointZero;
+}
+
 - (void)prepareLayout
 {
     NSMutableDictionary *layoutAttributes = [NSMutableDictionary new];
@@ -184,6 +193,8 @@
 
 - (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
 {
+	if (! _layoutAttributes)
+		[self prepareLayout];
     return _layoutAttributes[indexPath];
 }
 
