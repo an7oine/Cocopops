@@ -4,10 +4,11 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol GestureDrivenTabControllerDelegate <UITabBarControllerDelegate>
+@optional
+- (BOOL)tabBarController:(UITabBarController *)tabBarController shouldAcceptUserSelectedViewController:(UIViewController *)viewController;
+@end
+
 @interface GestureDrivenTabController : UITabBarController
-
-@property (nonatomic) BOOL disableAnimatedTransitions;
-@property (nonatomic) BOOL disableUserInitiatedTransitions;
-- (void)finishedWithAnimatedTransition;
-
+@property (nonatomic) CGFloat transitionDuration;
 @end
