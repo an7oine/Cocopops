@@ -158,11 +158,11 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	[_popoverView addSubview:self.contentViewController.view];
 	[_backgroundView addSubview:_popoverView];
 
-	if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending)
-		// attach onto an existing viewController's view on iOS 7
-		[UIApplication.sharedApplication.keyWindow.rootViewController.view addSubview:_backgroundView];
-	else
-		// attach directly onto the application window on iOS 8
+	//if ([UIDevice.currentDevice.systemVersion compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending)
+		// attach onto an existing viewController's view on iOS 7 (does not seem to work?)
+		// [UIApplication.sharedApplication.keyWindow.rootViewController.view addSubview:_backgroundView];
+	//else
+		// attach directly onto the application window on iOS 8+ (and 7)
 		[UIApplication.sharedApplication.keyWindow addSubview:_backgroundView];
 }
 
