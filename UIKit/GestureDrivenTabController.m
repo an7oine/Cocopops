@@ -27,56 +27,105 @@
 		self.transitionDuration = 0.2f;
 }
 
-- (void)handleEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender fromTheLeft:(BOOL)fromTheLeft
+- (void)handleEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender fromTheLeft:(BOOL)fromTheLeft toIndex:(NSInteger)index
 {
 	// get the current view hierarchy
     UIView *containerView = self.view;
-    UIView *currentView = self.selectedViewController.view;
+    UIView *outgoingView = self.selectedViewController.view;
 
-	// get the to-be-overlaid VC and have it load its view, then get that as well
-	UIViewController *overlayVC = self.viewControllers[self.selectedIndex + (fromTheLeft?-1:1)];
-    UIView *overlayView = overlayVC.view;
+	// get the incoming VC and its view
+	UIViewController *incomingVC = self.viewControllers[index];
+    UIView *incomingView = incomingVC.view;
 
 	// get the on-screen (horizontal) location and velocity of the gesture
     CGFloat touchLocation = [sender translationInView:containerView].x + (fromTheLeft? 0.0f : CGRectGetWidth(containerView.bounds));
     CGFloat touchVelocity = [sender velocityInView:containerView].x;
-    
+	
+	BOOL incomingOnTop = NO; 	// display incoming VC on top of outgoing one
+	BOOL incomingAnimation = NO; // animate incoming VC onto the screen
+	BOOL outgoingAnimation = NO; // animate outgoing VC out of the screen
+	switch (self.transitionStyle)
+	{
+		case kTabTransitionNone: 			incomingOnTop = YES; incomingAnimation = NO; outgoingAnimation = NO; break;
+		case kTabTransitionIncomingOnTop:	incomingOnTop = YES; incomingAnimation = YES; outgoingAnimation = NO; break;
+		case kTabTransitionOutgoingOnTop:	incomingOnTop = NO; incomingAnimation = NO; outgoingAnimation = YES; break;
+		case kTabTransitionLeftOnTop:
+			incomingOnTop = fromTheLeft;
+			incomingAnimation = fromTheLeft;
+			outgoingAnimation = ! fromTheLeft;
+			break;
+		case kTabTransitionRightOnTop:
+			incomingOnTop = ! fromTheLeft;
+			incomingAnimation = ! fromTheLeft;
+			outgoingAnimation = fromTheLeft;
+			break;
+		case kTabTransitionSideBySide:		incomingOnTop = NO; incomingAnimation = YES; outgoingAnimation = YES; break;
+		default:
+			NSLog(@"%@: invalid transitionStyle of %d", NSStringFromClass(self.class), (int)self.transitionStyle);
+			break;
+	}
+
     switch (sender.state)
     {
 		// ignore non-definitive touches
         case UIGestureRecognizerStatePossible:
             break;
 
-		// when the gesture starts, present the incoming overlay view and inform its controller
+		// when the gesture starts, present the incoming view (above or below existing the existing view) and inform its controller before and after
         case UIGestureRecognizerStateBegan:
-			[overlayVC viewWillAppear:NO];
-            [containerView insertSubview:overlayView aboveSubview:currentView];
-			[overlayVC viewDidAppear:NO];
+			[incomingVC viewWillAppear:NO];
+			
+			// immediately fill the screen with incoming content, if it's not to be animated into place
+			if (! incomingAnimation)
+				incomingView.frame = containerView.bounds;
+
+			// manipulate the subview order: place incoming on top, but have the outgoing immediately supersede it, if needed
+			// note: -[insertSubView:belowSubview:] does not seem to work correctly here (incoming will always appear on top)
+			[containerView insertSubview:incomingView aboveSubview:outgoingView];
+			if (! incomingOnTop)
+            	[containerView insertSubview:outgoingView aboveSubview:incomingView];
+			
+			[incomingVC viewDidAppear:NO];
+			
             // then fall through to the 'changed' case:
 
-		// each time the user moves their finger, adjust the overlay position accordingly
+		// each time the user moves their finger, adjust positions of incoming and outgoing views accordingly
         case UIGestureRecognizerStateChanged:
-            if (fromTheLeft)
-                overlayView.frame = CGRectOffset(containerView.bounds, -CGRectGetWidth(containerView.bounds)+touchLocation, 0.0f);
-            else
-                overlayView.frame = CGRectOffset(containerView.bounds, touchLocation, 0.0f);
+			if (incomingAnimation)
+			{
+				if (fromTheLeft)
+					incomingView.frame = CGRectOffset(containerView.bounds, -CGRectGetWidth(containerView.bounds)+touchLocation, 0.0f);
+				else
+					incomingView.frame = CGRectOffset(containerView.bounds, touchLocation, 0.0f);
+			}
+			if (outgoingAnimation)
+			{
+				if (fromTheLeft)
+					outgoingView.frame = CGRectOffset(containerView.bounds, touchLocation, 0.0f);
+				else
+					outgoingView.frame = CGRectOffset(containerView.bounds, -CGRectGetWidth(containerView.bounds)+touchLocation, 0.0f);
+			}
+			
             break;
 
 		// when finished, inspect the location and velocity to determine whether the user wants to switch tabs or if they changed their mind halfway through to the gesture
         case UIGestureRecognizerStateEnded:
         {
             // if the gesture in its current state of position + velocity would favour a transition, perform it
-            BOOL landingLeft = touchLocation + self.transitionDuration * touchVelocity < CGRectGetMidX(currentView.bounds);
+            BOOL landingLeft = touchLocation + self.transitionDuration * touchVelocity < CGRectGetMidX(containerView.bounds);
             if (fromTheLeft && ! landingLeft)
             {
 				// animate a slide-in from left to right
 				[UIView animateWithDuration:self.transitionDuration delay:0.0f options:UIViewAnimationOptionCurveEaseOut animations:^
 				{
-					overlayView.frame = currentView.frame;
+					if (incomingAnimation)
+						incomingView.frame = containerView.bounds;
+					if (outgoingAnimation)
+						outgoingView.frame = CGRectOffset(containerView.bounds, containerView.bounds.size.width, 0.0f);
 				} completion:^(BOOL finished)
 				{
-					[self setSelectedIndex:self.selectedIndex-1];
-					[self didSelectViewControllerAtIndex:self.selectedIndex];
+					[self setSelectedIndex:index];
+					[self didSelectViewControllerAtIndex:index];
 				}];
                 break;
             }
@@ -85,32 +134,40 @@
 				// animate a slide-in from right to left
 				[UIView animateWithDuration:self.transitionDuration delay:0.0f options:UIViewAnimationOptionCurveEaseOut animations:^
 				{
-					overlayView.frame = currentView.frame;
+					if (incomingAnimation)
+						incomingView.frame = containerView.bounds;
+					if (outgoingAnimation)
+						outgoingView.frame = CGRectOffset(containerView.bounds, -containerView.bounds.size.width, 0.0f);
 				} completion:^(BOOL finished)
 				{
-					[self setSelectedIndex:self.selectedIndex+1];
-					[self didSelectViewControllerAtIndex:self.selectedIndex];
+					[self setSelectedIndex:index];
+					[self didSelectViewControllerAtIndex:index];
 				}];
                 break;
             }
             // otherwise, fall through to the 'failed' case:
         }
 		
-		// if the gesture fails, is cancelled, or the user did not want a transition, pull back and remove the overlay view
+		// if the gesture fails, is cancelled, or the user did not want a transition, pull back and remove the incoming view
         case UIGestureRecognizerStateCancelled:
         case UIGestureRecognizerStateFailed:
             // animate a slide-out back to whence the overlay came
             [UIView animateWithDuration:self.transitionDuration delay:0.0f options:UIViewAnimationOptionCurveEaseIn animations:^
             {
-                if (fromTheLeft)
-                    overlayView.frame = CGRectOffset(currentView.frame, -containerView.bounds.size.width, 0.0f);
-                else
-                    overlayView.frame = CGRectOffset(currentView.frame, containerView.bounds.size.width, 0.0f);
+				if (incomingAnimation)
+				{
+					if (fromTheLeft)
+						incomingView.frame = CGRectOffset(containerView.bounds, -containerView.bounds.size.width, 0.0f);
+					else
+						incomingView.frame = CGRectOffset(containerView.bounds, containerView.bounds.size.width, 0.0f);
+				}
+				if (outgoingAnimation)
+					outgoingView.frame = containerView.bounds;
             } completion:^(BOOL finished)
             {
-				[overlayVC viewWillDisappear:NO];
-				[overlayView removeFromSuperview];
-				[overlayVC viewDidDisappear:NO];
+				[incomingVC viewWillDisappear:NO];
+				[incomingView removeFromSuperview];
+				[incomingVC viewDidDisappear:NO];
             }];
             break;
     }
@@ -119,19 +176,35 @@
 // handle user gestures only if not disabled
 - (IBAction)gotLeftEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender
 {
-    if (self.selectedIndex > 0 && [self shouldAcceptUserSelectedViewControllerAtIndex:self.selectedIndex-1])
-        [self handleEdgePanGesture:sender fromTheLeft:YES];
+	NSInteger index = self.selectedIndex-1;
+	if (index < 0)
+	{
+		if (self.isCircular)
+			index = self.viewControllers.count-1;
+		else
+			return;
+	}
+    if ([self shouldAcceptUserSelectedViewControllerAtIndex:index])
+        [self handleEdgePanGesture:sender fromTheLeft:YES toIndex:index];
 }
 - (IBAction)gotRightEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender
 {
-    if (self.selectedIndex < self.viewControllers.count-1 && [self shouldAcceptUserSelectedViewControllerAtIndex:self.selectedIndex+1])
-        [self handleEdgePanGesture:sender fromTheLeft:NO];
+	NSInteger index = self.selectedIndex+1;
+	if (index >= self.viewControllers.count)
+	{
+		if (self.isCircular)
+			index = 0;
+		else
+			return;
+	}
+    if ([self shouldAcceptUserSelectedViewControllerAtIndex:index])
+        [self handleEdgePanGesture:sender fromTheLeft:NO toIndex:index];
 }
 
-// allow swipe gestures to combine with any applicable content gestures
+// allow edge pan gestures to combine with any other gestures
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
-    return YES;
+    return [gestureRecognizer isKindOfClass:UIScreenEdgePanGestureRecognizer.class];
 }
 
 
