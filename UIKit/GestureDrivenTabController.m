@@ -29,9 +29,11 @@
 
 - (void)handleEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender fromTheLeft:(BOOL)fromTheLeft toIndex:(NSInteger)index
 {
-	// get the current view hierarchy
     UIView *containerView = self.view;
-    UIView *outgoingView = self.selectedViewController.view;
+
+	// get the outgoing VC and its view
+	UIViewController *outgoingVC = self.selectedViewController;
+    UIView *outgoingView = outgoingVC.view;
 
 	// get the incoming VC and its view
 	UIViewController *incomingVC = self.viewControllers[index];
@@ -124,6 +126,10 @@
 						outgoingView.frame = CGRectOffset(containerView.bounds, containerView.bounds.size.width, 0.0f);
 				} completion:^(BOOL finished)
 				{
+					[outgoingVC viewWillDisappear:NO];
+					[outgoingView removeFromSuperview];
+					[outgoingVC viewDidDisappear:NO];
+
 					[self setSelectedIndex:index];
 					[self didSelectViewControllerAtIndex:index];
 				}];
@@ -140,6 +146,10 @@
 						outgoingView.frame = CGRectOffset(containerView.bounds, -containerView.bounds.size.width, 0.0f);
 				} completion:^(BOOL finished)
 				{
+					[outgoingVC viewWillDisappear:NO];
+					[outgoingView removeFromSuperview];
+					[outgoingVC viewDidDisappear:NO];
+
 					[self setSelectedIndex:index];
 					[self didSelectViewControllerAtIndex:index];
 				}];
