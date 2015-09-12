@@ -84,11 +84,15 @@ static InAppPurchaseController *_sharedController;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 			case SKPaymentTransactionStateDeferred:
 #endif
+#if ! TARGET_OS_TV
 				[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+#endif
 				break;
 
 			case SKPaymentTransactionStateFailed:
+#if ! TARGET_OS_TV
 				[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+#endif
 				NSLog(@"Failed transaction: %@ (%@)", transaction, @(transaction.transactionState));
 				[queue finishTransaction:transaction];
 				break;
@@ -96,7 +100,9 @@ static InAppPurchaseController *_sharedController;
 			case SKPaymentTransactionStatePurchased:
 			case SKPaymentTransactionStateRestored:
 			{
+#if ! TARGET_OS_TV
 				[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+#endif
 				NSString *productIdentifier = transaction.payment.productIdentifier;
 				[queue finishTransaction:transaction];
 

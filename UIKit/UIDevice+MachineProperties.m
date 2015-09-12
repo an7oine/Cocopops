@@ -46,7 +46,13 @@ typedef struct
     
     if (machine.kind == kMachineSimulator)
         // iPhone Simulator: rely on the UI idiom (wrong results on iPhone 6+, iPad Mini)
-        return (self.userInterfaceIdiom == UIUserInterfaceIdiomPad)? 132.0f : 163.0f;
+        switch (self.userInterfaceIdiom)
+        {
+            case UIUserInterfaceIdiomPad: return 132.0f;
+            case UIUserInterfaceIdiomPhone: return 163.0f;
+            case UIUserInterfaceIdiomTV: return 55.0f; // 40 inch display at 1080p
+            default: return 163.0f;
+        }
     
     else if (machine.kind == kMachinePhone && machine.major == 7 && machine.minor == 1)
         // iPhone 6 Plus (triple pixels, 401 PixPI)

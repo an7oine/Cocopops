@@ -85,7 +85,9 @@
 }
 - (NSInteger)numberOfItemsInSection:(NSInteger)section
 {
-	if ([self easternBoundInSection:section] < [self westernBoundInSection:section])
+    if (self.north+section > self.south)
+        return 0;
+	else if ([self easternBoundInSection:section] < [self westernBoundInSection:section])
 		return 0;
 	else
 		return ([self easternBoundInSection:section] - [self westernBoundInSection:section]) / self.adjacentItemsSeparation + 1;
