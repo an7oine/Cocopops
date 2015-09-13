@@ -50,7 +50,9 @@ typedef struct
         {
             case UIUserInterfaceIdiomPad: return 132.0f;
             case UIUserInterfaceIdiomPhone: return 163.0f;
+#if __TV_OS_VERSION_MAX_ALLOWED >= 90000
             case UIUserInterfaceIdiomTV: return 55.0f; // 40 inch display at 1080p
+#endif
             default: return 163.0f;
         }
     
