@@ -136,4 +136,15 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	return CGSizeMake(width, height);
 }
 
+#if TARGET_OS_TV
+- (UIView *)preferredFocusedView
+{
+	for (NSInteger section=0; section < _accessoryTypes.count; section++)
+		for (NSInteger item=0; item < [_accessoryTypes[section] count]; item++)
+			if ([_accessoryTypes[section][item] integerValue] == UITableViewCellAccessoryCheckmark)
+				return [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]];
+	return super.preferredFocusedView;
+}
+#endif
+
 @end
