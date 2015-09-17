@@ -48,6 +48,7 @@ NSString *const UICollectionElementKindSectionLining = @"UICollectionElementKind
 			// expand to the smallest covering area of whole pixels
 			attributes.frame = CGRectIntegral(frame);
 		}
+		attributes.zIndex = -1;
 
 		[sectionLiningAttributes addObject:attributes];
 	}

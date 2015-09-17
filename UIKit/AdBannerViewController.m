@@ -76,7 +76,11 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     return [self.contentController preferredInterfaceOrientationForPresentation];
 }
+#ifdef __IPHONE_9_0
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+#else
 - (NSUInteger)supportedInterfaceOrientations
+#endif
 {
     return [self.contentController supportedInterfaceOrientations];
 }
