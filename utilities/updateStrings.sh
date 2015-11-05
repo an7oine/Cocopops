@@ -27,6 +27,9 @@ done
 # then re-generate strings (in the development language) for all remaining files
 genstrings -o "${localisation_dir}/${dev_language}.lproj" "$@"
 
+# a regular expression to match localisation keys
+localisation_regex="^\"(.*)\" = \"(.*)\";$"
+
 # enumerate all languages except development and Base
 shopt -s nullglob
 for lproj in "${localisation_dir}"/*.lproj
@@ -47,24 +50,26 @@ for lproj in "${localisation_dir}"/*.lproj
 		 do
 
 			# skip comments and empty lines
-			string_cond="^\""
-			if [[ "$l" =~ $string_cond ]]
+			if [[ "$l" =~ $localisation_regex ]]
 			 then
 
-				# get the localisation key
-				key="$( echo $l | cut -d \" -f 2 )"
-				# get its value in the development language
-				dev_value="$( echo $l | cut -d \" -f 4 )"
+				# get the localisation key and its value in the development language
+				key="${BASH_REMATCH[1]}"
+				dev_value="${BASH_REMATCH[2]}"
 
 				# find an existing translation in current lproj
-				target_value="$( iconv -f UTF-16 -t UTF-8 "$target" 2>/dev/null | grep "^\"${key}\"" | cut -d \" -f 4 )"
+				target_line="$( iconv -f UTF-16 -t UTF-8 "$target" 2>/dev/null | grep "^\"${key}\"" )"
+				if [[ "$target_line" =~ $localisation_regex ]]
+				 then
+					target_value="${BASH_REMATCH[2]}"
+				fi
 
 				# disqualify existing Xcode placeholders
 				placeholder_regex="<#.*#>"
 
-				# if an existing translation was found, replicate in the output
+				# if an existing translation was found, replicate the line in the output
 				if [ -n "$target_value" ] && ! [[ "$target_value" =~ $placeholder_regex ]]
-				 then echo "\"$key\" = \"$target_value\";"
+				 then echo "$target_line"
 
 				# otherwise, write the base language version as placeholder (Xcode token) and report it
 				 else echo "\"$key\" = \"<#${dev_value}#>\";"
@@ -81,10 +86,9 @@ for lproj in "${localisation_dir}"/*.lproj
 		# find any old strings not found in the current version and append them at the end
 		iconv -f UTF-16 -t UTF-8 "$target" | while IFS='' read l
 		 do
-			string_cond="^\""
-			if [[ "$l" =~ $string_cond ]]
+			if [[ "$l" =~ $localisation_regex ]]
 			 then
-				grep "\"$( cut -d \" -f 2 <<<"$l" )\"" /tmp/localised.strings &>/dev/null || echo "$l"
+				grep "${BASH_REMATCH[1]}" /tmp/localised.strings &>/dev/null || echo "$l"
 			fi
 		done > /tmp/redundant.strings
 		if [ -s /tmp/redundant.strings ]
