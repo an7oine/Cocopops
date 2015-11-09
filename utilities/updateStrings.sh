@@ -60,8 +60,8 @@ for lproj in "${localisation_dir}"/*.lproj
 				# find an existing translation in current lproj
 				target_line="$( iconv -f UTF-16 -t UTF-8 "$target" 2>/dev/null | grep "^\"${key}\"" )"
 				if [[ "$target_line" =~ $localisation_regex ]]
-				 then
-					target_value="${BASH_REMATCH[2]}"
+				 then target_value="${BASH_REMATCH[2]}"
+				 else target_value=""
 				fi
 
 				# disqualify existing Xcode placeholders
