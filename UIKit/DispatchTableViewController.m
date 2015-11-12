@@ -133,6 +133,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
         }
 	}
 
+#if TARGET_OS_TV
+	height += cellFont.pointSize * 2.5f;
+#endif
+
 	return CGSizeMake(width, height);
 }
 
