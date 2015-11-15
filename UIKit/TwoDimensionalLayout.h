@@ -10,7 +10,7 @@
 // sections amount to rows from North to South
 // items amount to consecutive cells on one row from West to East
 
-@interface TwoDimensionalLayout : UICollectionViewLayout
+@interface TwoDimensionalLayout : UICollectionViewLayout <NSCopying>
 
 // extremes of the grid in use
 @property (nonatomic) NSInteger west, east;

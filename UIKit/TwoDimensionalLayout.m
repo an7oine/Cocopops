@@ -39,6 +39,22 @@
     return self;
 }
 
+- (id)copyWithZone:(NSZone *)zone
+{
+	TwoDimensionalLayout *layout = [[self.class allocWithZone:zone] init];
+	layout.west = self.west;
+	layout.east = self.east;
+	layout.north = self.north;
+	layout.south = self.south;
+	layout.adjacentItemsSeparation = self.adjacentItemsSeparation;
+	layout.wrapHorizontally = self.wrapHorizontally;
+	layout.itemSize = self.itemSize;
+	layout.itemSpacing = self.itemSpacing;
+	layout.zoomFactor = self.zoomFactor;
+	layout.delegate = self.delegate;
+	return layout;
+}
+
 
 #pragma mark - Dimensions & zooming
 
