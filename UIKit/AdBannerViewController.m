@@ -193,10 +193,10 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
     [UIView animateWithDuration:animationDuration.floatValue delay:0.0f options:animationCurve.integerValue animations:^
     {
-    } completion:^(BOOL finished)
-	{
 		 [self.view setNeedsLayout];
 		 [self.view layoutIfNeeded];
+    } completion:^(BOOL finished)
+	{
 	}];
 }
 
@@ -209,10 +209,10 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
     [UIView animateWithDuration:animationDuration.floatValue delay:0.0f options:animationCurve.integerValue animations:^
 	{
-	} completion:^(BOOL finished)
-	{
 		[self.view setNeedsLayout];
 		[self.view layoutIfNeeded];
+	} completion:^(BOOL finished)
+	{
 	}];
 }
 
