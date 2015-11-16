@@ -56,6 +56,8 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	BOOL _fromBarButtonItem;
 
 	UIPopoverArrowDirection _permittedArrowDirections;
+	
+	BOOL _registeredForPreferredContentSizeObserving;
 }
 
 + (BOOL)_popoversDisabled { return NO; } // override super's behaviour
@@ -68,6 +70,24 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 - (CGSize)popoverContentSize
 {
 	return _popoverContentSize.width > 0.0f && _popoverContentSize.height > 0.0f? _popoverContentSize : self.contentViewController.preferredContentSize;
+}
+- (void)setPopoverContentSize:(CGSize)popoverContentSize
+{
+	[self setPopoverContentSize:popoverContentSize animated:_popoverVisible];
+}
+- (void)setPopoverContentSize:(CGSize)size animated:(BOOL)animated
+{
+	_popoverContentSize = size;
+	if (_popoverVisible)
+	{
+		if (animated)
+			[UIView animateWithDuration:0.3f animations:^
+			{
+				[self setupViewFramesFirstTime:NO];
+			} completion:nil];
+		else
+			[self setupViewFramesFirstTime:NO];
+	}
 }
 
 
@@ -413,6 +433,13 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		[self.contentViewController viewDidAppear:YES];
 		[_popoverView becomeFirstResponder];
 	}
+	
+	// set to observe future changes to the preferredContentSize property
+	if (! _registeredForPreferredContentSizeObserving)
+	{
+		[self.contentViewController addObserver:self forKeyPath:@"preferredContentSize" options:NSKeyValueObservingOptionNew context:(__bridge void *)PhonePopoverController.class];
+		_registeredForPreferredContentSizeObserving = YES;
+	}
 }
 
 - (void)presentPopoverFromBarButtonItem:(UIBarButtonItem *)item permittedArrowDirections:(UIPopoverArrowDirection)arrowDirections animated:(BOOL)animated
@@ -438,6 +465,12 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 - (void)dismissPopoverAnimated:(BOOL)animated
 {
+	if (_registeredForPreferredContentSizeObserving)
+	{
+		[self.contentViewController removeObserver:self forKeyPath:@"preferredContentSize" context:(__bridge void *)PhonePopoverController.class];
+		_registeredForPreferredContentSizeObserving = NO;
+	}
+
 	[UIDevice.currentDevice endGeneratingDeviceOrientationNotifications];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 
@@ -473,6 +506,18 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 			_popoverArrowDirection = UIPopoverArrowDirectionUnknown;
 		}
 	}
+}
+
+
+#pragma mark - Observance
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+	if (context != (__bridge void *)PhonePopoverController.class)
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+	
+	else if ([keyPath isEqualToString:@"preferredContentSize"])
+		self.popoverContentSize = self.contentViewController.preferredContentSize;
 }
 
 @end
