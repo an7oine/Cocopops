@@ -47,7 +47,11 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
-	cell.textLabel.text = _choices[indexPath.section][indexPath.row];
+	id text = _choices[indexPath.section][indexPath.row];
+	if ([text isKindOfClass:NSAttributedString.class])
+		cell.textLabel.attributedText = text;
+	else
+		cell.textLabel.text = text;
 	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
@@ -89,8 +93,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSInteger row))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSInteger row))block
 {
+	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
+
 	while (_choices.count <= section)
 	{
 		[_choices addObject:[NSMutableArray new]];
@@ -120,7 +126,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
         }
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
 		{
-			CGFloat textWidth = [_choices[section][item] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
+			NSString *text = _choices[section][item];
+			if ([text isKindOfClass:NSAttributedString.class])
+				text = ((NSAttributedString *)text).string;
+			CGFloat textWidth = [text sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
 			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
 			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
 			height += cellSize.height;
