@@ -14,6 +14,8 @@ extern NSString *const DispatchTableViewCellReuseIdentifier; // use this to regi
 @property (nonatomic) NSMutableArray *backgroundColours;
 @property (nonatomic, readonly) NSMutableDictionary *blocks;
 
+@property (nonatomic) BOOL hidesNavigationBarWhenVisible;
+
 - (void)clearContent;
 - (void)setHeader:(NSString *)header forSection:(NSInteger)section;
 - (void)setFooter:(NSString *)footer forSection:(NSInteger)section;

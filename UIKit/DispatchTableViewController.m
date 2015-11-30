@@ -111,8 +111,12 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	return row;
 }
 
+@synthesize preferredContentSize=_preferredContentSize;
 - (CGSize)preferredContentSize
 {
+	if (_preferredContentSize.width > 0.0f && _preferredContentSize.height > 0.0f)
+		return _preferredContentSize;
+
 	UIFont *cellFont = [UITableViewCell new].textLabel.font; // get the font from a dummy cell (17.0f point)
 
 	CGFloat width = 0.0f, height = 0.0f;
