@@ -402,7 +402,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	// set to receive updates of device orientation
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
-	[UIDevice.currentDevice beginGeneratingDeviceOrientationNotifications];
+	//[UIDevice.currentDevice beginGeneratingDeviceOrientationNotifications];
 
 	// setup views & frames
 	[self setupViewHierarchy];
@@ -471,7 +471,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		_registeredForPreferredContentSizeObserving = NO;
 	}
 
-	[UIDevice.currentDevice endGeneratingDeviceOrientationNotifications];
+	//[UIDevice.currentDevice endGeneratingDeviceOrientationNotifications];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 
 	if (_popoverView)
