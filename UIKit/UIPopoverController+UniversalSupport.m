@@ -44,7 +44,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 @implementation PhonePopoverController
 {
-	UIView *_popoverView, *_backgroundView;
+	UIView *_popoverView, *_arrowView, *_backgroundView;
 
 	CAShapeLayer *_arrowShapeLayer;
 
@@ -128,27 +128,28 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 + (CGPathRef)newArrowToDirection:(UIPopoverArrowDirection)dir
 {
 	CGMutablePathRef path = CGPathCreateMutable();
+	CGAffineTransform transform = CGAffineTransformTranslate(CGAffineTransformMakeScale(ARROW_SIZE, ARROW_SIZE), 1.0f, 1.0f);
 	switch (dir)
 	{
 			case UIPopoverArrowDirectionLeft:
-			CGPathMoveToPoint(path, NULL, 0.0f, ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, ARROW_SIZE, 2*ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, ARROW_SIZE, 0.0f);
+			CGPathMoveToPoint(path, &transform, 0.0f, -1.0f);
+			CGPathAddCurveToPoint(path, &transform, 0.0f, -0.5f, -1.0f, -0.3f, -1.0f, 0.0f);
+			CGPathAddCurveToPoint(path, &transform, -1.0f, 0.3f, 0.0f, 0.5f, 0.0f, 1.0f);
 			break;
 			case UIPopoverArrowDirectionRight:
-			CGPathMoveToPoint(path, NULL, 2*ARROW_SIZE, ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, ARROW_SIZE, 0.0f);
-			CGPathAddLineToPoint(path, NULL, ARROW_SIZE, 2*ARROW_SIZE);
+			CGPathMoveToPoint(path, &transform, 0.0f, 1.0f);
+			CGPathAddCurveToPoint(path, &transform, 0.0f, 0.5f, 1.0f, 0.3f, 1.0f, 0.0f);
+			CGPathAddCurveToPoint(path, &transform, 1.0f, -0.3f, 0.0f, -0.5f, 0.0f, -1.0f);
 			break;
 			case UIPopoverArrowDirectionUp:
-			CGPathMoveToPoint(path, NULL, ARROW_SIZE, 0.0f);
-			CGPathAddLineToPoint(path, NULL, 0.0f, ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, 2*ARROW_SIZE, ARROW_SIZE);
+			CGPathMoveToPoint(path, &transform, 1.0f, 0.0f);
+			CGPathAddCurveToPoint(path, &transform, 0.5f, 0.0f, 0.3f, -1.0f, 0.0f, -1.0f);
+			CGPathAddCurveToPoint(path, &transform, -0.3f, -1.0f, -0.5f, 0.0f, -1.0f, 0.0f);
 			break;
 			case UIPopoverArrowDirectionDown:
-			CGPathMoveToPoint(path, NULL, ARROW_SIZE, 2*ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, 2*ARROW_SIZE, ARROW_SIZE);
-			CGPathAddLineToPoint(path, NULL, 0.0f, ARROW_SIZE);
+			CGPathMoveToPoint(path, &transform, -1.0f, 0.0f);
+			CGPathAddCurveToPoint(path, &transform, -0.5f, 0.0f, -0.3f, 1.0f, 0.0f, 1.0f);
+			CGPathAddCurveToPoint(path, &transform, 0.3f, 1.0f, 0.5f, 0.0f, 1.0f, 0.0f);
 			break;
 		default:
 			break;
@@ -171,9 +172,18 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	_popoverView = [[UIView alloc] initWithFrame:CGRectZero];
 	_popoverView.opaque = NO;
+	
+	if (NSClassFromString(@"UIVisualEffectView") != Nil)
+		_arrowView = [[UIVisualEffectView alloc] initWithEffect:[[UIBlurEffect alloc] init]];
+	else
+	{
+		_arrowView = [[UIView alloc] initWithFrame:CGRectZero];
+		_arrowView.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.75f];
+	}
+	[_backgroundView addSubview:_arrowView];
 
 	_arrowShapeLayer = [[CAShapeLayer alloc] init];
-	[_backgroundView.layer addSublayer:_arrowShapeLayer];
+	_arrowView.layer.mask = _arrowShapeLayer;
 
 	[_popoverView addSubview:self.contentViewController.view];
 	[_backgroundView addSubview:_popoverView];
@@ -328,17 +338,14 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	if (dir != UIPopoverArrowDirectionUnknown)
 	{
 		if (dir==UIPopoverArrowDirectionUp || dir==UIPopoverArrowDirectionDown)
-			_arrowShapeLayer.frame = [self.class adjustHorizontally:arrow toBounds:CGRectInset(usable, CORNER_SIZE, 0.0f)];
+			_arrowView.frame = [self.class adjustHorizontally:arrow toBounds:CGRectInset(usable, CORNER_SIZE, 0.0f)];
 		else
-			_arrowShapeLayer.frame = [self.class adjustVertically:arrow toBounds:CGRectInset(usable, 0.0f, CORNER_SIZE)];
+			_arrowView.frame = [self.class adjustVertically:arrow toBounds:CGRectInset(usable, 0.0f, CORNER_SIZE)];
 
 		CGPathRef path = [self.class newArrowToDirection:dir];
+		_arrowShapeLayer.frame = _arrowView.bounds;
 		_arrowShapeLayer.path = path;
 		CGPathRelease(path);
-
-		_arrowShapeLayer.fillColor = UIColor.whiteColor.CGColor;
-		_arrowShapeLayer.strokeColor = UIColor.whiteColor.CGColor;
-		_arrowShapeLayer.lineJoin = kCALineJoinRound;
 	}
 	else
 		_arrowShapeLayer.path = NULL;
