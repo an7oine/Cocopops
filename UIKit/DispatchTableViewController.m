@@ -11,24 +11,14 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 {
 	if (! (self = [super init]))
 		return nil;
-	_choices = [NSMutableArray new];
-	_headers = [NSMutableArray new];
-	_footers = [NSMutableArray new];
-	_accessoryTypes = [NSMutableArray new];
-	_backgroundColours = [NSMutableArray new];
-	_blocks = [NSMutableDictionary new];
+	[self clearContent];
 	return self;
 }
 - (instancetype)initWithStyle:(UITableViewStyle)style
 {
 	if (! (self = [super initWithStyle:style]))
 		return nil;
-	_choices = [NSMutableArray new];
-	_headers = [NSMutableArray new];
-	_footers = [NSMutableArray new];
-	_accessoryTypes = [NSMutableArray new];
-	_backgroundColours = [NSMutableArray new];
-	_blocks = [NSMutableDictionary new];
+	[self clearContent];
 	return self;
 }
 - (void)loadView
@@ -58,9 +48,9 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	void (^block)(NSInteger rowIndex) = self.blocks[indexPath];
+	void (^block)(NSIndexPath *indexPath) = self.blocks[indexPath.section][indexPath.item];
 	if (block)
-		block(indexPath.row);
+		block(indexPath);
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -71,7 +61,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
     _footers = [NSMutableArray new];
     _accessoryTypes = [NSMutableArray new];
     _backgroundColours = [NSMutableArray new];
-    _blocks = [NSMutableDictionary new];
+    _blocks = [NSMutableArray new];
 }
 
 - (void)setHeader:(NSString *)header forSection:(NSInteger)section
@@ -93,7 +83,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSInteger row))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *indexPath))block
 {
 	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
 
@@ -102,13 +92,74 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		[_choices addObject:[NSMutableArray new]];
 		[_accessoryTypes addObject:[NSMutableArray new]];
 		[_backgroundColours addObject:[NSMutableArray new]];
+		[_blocks addObject:[NSMutableArray new]];
+		
+		if (self.isViewLoaded)
+			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_choices.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
 	NSInteger row = [_choices[section] count];
 	[_choices[section] addObject:title];
 	[_accessoryTypes[section] addObject:@( accessoryType )];
 	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
-	_blocks[[NSIndexPath indexPathForRow:row inSection:section]] = block;
+	[_blocks[section] addObject:block];
+	
+	if (self.isViewLoaded)
+		[self.tableView insertRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:row inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+	
 	return row;
+}
+
+- (NSInteger)moveChoiceFromSection:(NSInteger)section item:(NSInteger)item intoSection:(NSInteger)newSection
+{
+	while (_choices.count <= newSection)
+	{
+		[_choices addObject:[NSMutableArray new]];
+		[_accessoryTypes addObject:[NSMutableArray new]];
+		[_backgroundColours addObject:[NSMutableArray new]];
+		[_blocks addObject:[NSMutableArray new]];
+
+		if (self.isViewLoaded)
+			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_choices.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
+	}
+	NSInteger newRow = [_choices[newSection] count];
+	
+	NSString *title = _choices[section][item];
+	[_choices[section] removeObjectAtIndex:item];
+	NSNumber *accessoryType = _accessoryTypes[section][item];
+	[_accessoryTypes[section] removeObjectAtIndex:item];
+	UIColor *backgroundColour = _backgroundColours[section][item];
+	[_backgroundColours[section] removeObjectAtIndex:item];
+	id block = _blocks[section][item];
+	[_blocks[section] removeObjectAtIndex:item];
+	
+	[_choices[newSection] addObject:title];
+	[_accessoryTypes[newSection] addObject:accessoryType];
+	[_backgroundColours[newSection] addObject:backgroundColour];
+	[_blocks[newSection] addObject:block];
+	
+	if (self.isViewLoaded)
+		[self.tableView moveRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section] toIndexPath:[NSIndexPath indexPathForRow:newRow inSection:newSection]];
+	
+	return newRow;
+}
+
+- (void)removeChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	[_choices[section] removeObjectAtIndex:item];
+	[_accessoryTypes[section] removeObjectAtIndex:item];
+	[_backgroundColours[section] removeObjectAtIndex:item];
+	[_blocks[section] removeObjectAtIndex:item];
+	
+	if (self.isViewLoaded)
+		[self.tableView deleteRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
+- (void)setTitle:(NSString *)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	_choices[section][item] = title;
+	
+	if (self.isViewLoaded)
+		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 
 @synthesize preferredContentSize=_preferredContentSize;
