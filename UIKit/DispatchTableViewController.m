@@ -121,7 +121,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		if (self.isViewLoaded)
 			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_choices.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
-	NSInteger newRow = [_choices[newSection] count];
+	NSInteger newRow = [_choices[newSection] count] - (newSection==section? 1 : 0);
 	
 	NSString *title = _choices[section][item];
 	[_choices[section] removeObjectAtIndex:item];
