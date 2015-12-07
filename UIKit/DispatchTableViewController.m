@@ -30,10 +30,22 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	self.view = self.tableView;
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView { return _choices.count; }
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section { return [_choices[section] count]; }
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section { return _headers.count > section? _headers[section] : nil; }
-- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section { return _footers.count > section? _footers[section] : nil; }
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+	return _choices.count;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+	return [_choices[section] count];
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+	return _headers.count > section && [_choices[section] count] > 0? _headers[section] : nil;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
+{
+	return _footers.count > section && [_choices[section] count] > 0? _footers[section] : nil;
+}
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
@@ -173,7 +185,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	CGFloat width = 0.0f, height = 0.0f;
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
-		if (_headers.count > section && [_headers[section] length] > 0)
+		if (_headers.count > section && [_headers[section] length] > 0 && [_choices[section] count] > 0)
         {
             CGFloat textWidth = [_headers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
             width = MAX(width, textWidth);
@@ -189,7 +201,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
 			height += cellSize.height;
 		}
-		if (_footers.count > section && [_footers[section] length] > 0)
+		if (_footers.count > section && [_footers[section] length] > 0 && [_choices[section] count] > 0)
         {
             CGFloat textWidth = [_footers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
             width = MAX(width, textWidth);
