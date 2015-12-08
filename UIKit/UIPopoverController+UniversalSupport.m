@@ -53,7 +53,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 	UIView *_showFromView;
 	CGRect _showFromRect;
-	BOOL _fromBarButtonItem;
+	UIBarButtonItem *_showFromBarButtonItem;
 
 	UIPopoverArrowDirection _permittedArrowDirections;
 	
@@ -235,7 +235,14 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		minimumSize.height *= 0.5f;
 
 	// target a specific rectangle on screen, or whole screen if none was specified
-	CGRect target = _showFromView? [_backgroundView convertRect:_showFromRect fromView:_showFromView] : _backgroundView.bounds;
+	CGRect target = _backgroundView.bounds;
+	if (_showFromView)
+		target = [_backgroundView convertRect:_showFromRect fromView:_showFromView];
+	else if (_showFromBarButtonItem)
+	{
+		UIView *barButtonItemView = [_showFromBarButtonItem valueForKey:@"view"];
+		target = [_backgroundView convertRect:barButtonItemView.bounds fromView:barButtonItemView];
+	}
 
 	// determine which direction the arrow should point, if at all
 	UIPopoverArrowDirection dir = UIPopoverArrowDirectionUnknown;
@@ -312,7 +319,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	popover = CGRectIntersection(popover, usable);
 
 	// give the delegate a chance to propose a new frame upon popover reposition
-	if (! firstTime && ! _fromBarButtonItem && [self.delegate respondsToSelector:@selector(popoverController:willRepositionPopoverToRect:inView:)])
+	if (! firstTime && [self.delegate respondsToSelector:@selector(popoverController:willRepositionPopoverToRect:inView:)])
 	{
 		CGRect proposedFrame = popover;
 		UIView *proposedView = _backgroundView.superview;
@@ -365,6 +372,18 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 
 - (void)deviceOrientationDidChange:(NSNotification*)notification
 {
+	/*
+	if (_showFromBarButtonItem)
+	{
+		[self dismissPopoverAnimated:NO];
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3f * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
+		{
+			[self presentPopoverFromBarButtonItem:_showFromBarButtonItem permittedArrowDirections:_permittedArrowDirections animated:NO];
+		});
+		return;
+	}
+	*/
+
 	UIDeviceOrientation deviceOrientation = UIDevice.currentDevice.orientation;
 	UIInterfaceOrientation interfaceOrientation = UInterfaceOrientationWithDeviceOrientation(deviceOrientation);
 
@@ -452,12 +471,12 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 - (void)presentPopoverFromBarButtonItem:(UIBarButtonItem *)item permittedArrowDirections:(UIPopoverArrowDirection)arrowDirections animated:(BOOL)animated
 {
 	// get the bar button's view via KVC
-	_showFromView = [item valueForKey:@"view"];
-	_showFromRect = _showFromView.bounds;
+	//_showFromView = [item valueForKey:@"view"];
+	//_showFromRect = _showFromView.bounds;
+	_showFromBarButtonItem = item;
 	_permittedArrowDirections = arrowDirections;
-	if (_showFromView)
-		self.passthroughViews = [@[ _showFromView.superview, ] arrayByAddingObjectsFromArray:self.passthroughViews];
-	_fromBarButtonItem = YES;
+	//if (_showFromView)
+	//	self.passthroughViews = [@[ _showFromView.superview, ] arrayByAddingObjectsFromArray:self.passthroughViews];
 	[self presentPopoverAnimated:animated];
 }
 
@@ -466,7 +485,6 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	_showFromView = view;
 	_showFromRect = rect;
 	_permittedArrowDirections = arrowDirections;
-	_fromBarButtonItem = NO;
 	[self presentPopoverAnimated:animated];
 }
 
