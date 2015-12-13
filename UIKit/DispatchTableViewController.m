@@ -6,6 +6,21 @@
 
 NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellReuseIdentifier";
 
+@interface SubtitleStyleTableViewCell : UITableViewCell @end
+@implementation SubtitleStyleTableViewCell
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:reuseIdentifier]; }
+@end
+
+@interface Value1StyleTableViewCell : UITableViewCell @end
+@implementation Value1StyleTableViewCell
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:reuseIdentifier]; }
+@end
+
+@interface Value2StyleTableViewCell : UITableViewCell @end
+@implementation Value2StyleTableViewCell
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleValue2 reuseIdentifier:reuseIdentifier]; }
+@end
+
 @implementation DispatchTableViewController
 - (instancetype)init
 {
@@ -24,7 +39,17 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 - (void)loadView
 {
 	self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
-	[self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
+
+	Class cellClass = UITableViewCell.class;
+	switch (self.cellStyle)
+	{
+	case UITableViewCellStyleSubtitle: cellClass = SubtitleStyleTableViewCell.class; break;
+	case UITableViewCellStyleValue1: cellClass = Value1StyleTableViewCell.class; break;
+	case UITableViewCellStyleValue2: cellClass = Value2StyleTableViewCell.class; break;
+	default: break;
+	}
+	[self.tableView registerClass:cellClass forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
+
 	self.tableView.delegate = self;
 	self.tableView.dataSource = self;
 	self.view = self.tableView;
@@ -32,28 +57,35 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return _choices.count;
+	return _titles.count;
 }
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	return [_choices[section] count];
+	return [_titles[section] count];
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-	return _headers.count > section && [_choices[section] count] > 0? _headers[section] : nil;
+	return _headers.count > section && [_titles[section] count] > 0? _headers[section] : nil;
 }
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
-	return _footers.count > section && [_choices[section] count] > 0? _footers[section] : nil;
+	return _footers.count > section && [_titles[section] count] > 0? _footers[section] : nil;
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
-	id text = _choices[indexPath.section][indexPath.row];
-	if ([text isKindOfClass:NSAttributedString.class])
-		cell.textLabel.attributedText = text;
+	id title = _titles[indexPath.section][indexPath.row];
+	if ([title isKindOfClass:NSAttributedString.class])
+		cell.textLabel.attributedText = title;
 	else
-		cell.textLabel.text = text;
+		cell.textLabel.text = title;
+	id detail = _details[indexPath.section][indexPath.row];
+	if (detail == NSNull.null)
+		cell.detailTextLabel.text = nil;
+	else if ([detail isKindOfClass:NSAttributedString.class])
+		cell.detailTextLabel.attributedText = detail;
+	else
+		cell.detailTextLabel.text = detail;
 	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
@@ -68,7 +100,8 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 - (void)clearContent
 {
-    _choices = [NSMutableArray new];
+    _titles = [NSMutableArray new];
+    _details = [NSMutableArray new];
     _headers = [NSMutableArray new];
     _footers = [NSMutableArray new];
     _accessoryTypes = [NSMutableArray new];
@@ -95,22 +128,25 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *indexPath))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title detail:(NSString *)detail accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
 {
 	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
+	NSAssert(! detail || [detail isKindOfClass:NSString.class] || [detail isKindOfClass:NSAttributedString.class], @"'detail' must be an instance of NSString or NSAttributedString !");
 
-	while (_choices.count <= section)
+	while (_titles.count <= section)
 	{
-		[_choices addObject:[NSMutableArray new]];
+		[_titles addObject:[NSMutableArray new]];
+		[_details addObject:[NSMutableArray new]];
 		[_accessoryTypes addObject:[NSMutableArray new]];
 		[_backgroundColours addObject:[NSMutableArray new]];
 		[_blocks addObject:[NSMutableArray new]];
 		
 		if (self.isViewLoaded)
-			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_choices.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
+			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_titles.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
-	NSInteger row = [_choices[section] count];
-	[_choices[section] addObject:title];
+	NSInteger row = [_titles[section] count];
+	[_titles[section] addObject:title];
+	[_details[section] addObject:detail ?: NSNull.null];
 	[_accessoryTypes[section] addObject:@( accessoryType )];
 	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
 	[_blocks[section] addObject:block];
@@ -121,22 +157,30 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	return row;
 }
 
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
+{
+	return [self addChoiceIntoSection:section withTitle:title detail:nil accessoryType:accessoryType backgroundColour:backgroundColour block:block];
+}
+
 - (NSInteger)moveChoiceFromSection:(NSInteger)section item:(NSInteger)item intoSection:(NSInteger)newSection
 {
-	while (_choices.count <= newSection)
+	while (_titles.count <= newSection)
 	{
-		[_choices addObject:[NSMutableArray new]];
+		[_titles addObject:[NSMutableArray new]];
+		[_details addObject:[NSMutableArray new]];
 		[_accessoryTypes addObject:[NSMutableArray new]];
 		[_backgroundColours addObject:[NSMutableArray new]];
 		[_blocks addObject:[NSMutableArray new]];
 
 		if (self.isViewLoaded)
-			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_choices.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
+			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_titles.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
-	NSInteger newRow = [_choices[newSection] count] - (newSection==section? 1 : 0);
+	NSInteger newRow = [_titles[newSection] count] - (newSection==section? 1 : 0);
 	
-	NSString *title = _choices[section][item];
-	[_choices[section] removeObjectAtIndex:item];
+	id title = _titles[section][item];
+	[_titles[section] removeObjectAtIndex:item];
+	id detail = _details[section][item];
+	[_details[section] removeObjectAtIndex:item];
 	NSNumber *accessoryType = _accessoryTypes[section][item];
 	[_accessoryTypes[section] removeObjectAtIndex:item];
 	UIColor *backgroundColour = _backgroundColours[section][item];
@@ -144,7 +188,8 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	id block = _blocks[section][item];
 	[_blocks[section] removeObjectAtIndex:item];
 	
-	[_choices[newSection] addObject:title];
+	[_titles[newSection] addObject:title];
+	[_details[newSection] addObject:detail];
 	[_accessoryTypes[newSection] addObject:accessoryType];
 	[_backgroundColours[newSection] addObject:backgroundColour];
 	[_blocks[newSection] addObject:block];
@@ -157,7 +202,8 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 - (void)removeChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	[_choices[section] removeObjectAtIndex:item];
+	[_titles[section] removeObjectAtIndex:item];
+	[_details[section] removeObjectAtIndex:item];
 	[_accessoryTypes[section] removeObjectAtIndex:item];
 	[_backgroundColours[section] removeObjectAtIndex:item];
 	[_blocks[section] removeObjectAtIndex:item];
@@ -166,9 +212,17 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		[self.tableView deleteRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 
-- (void)setTitle:(NSString *)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+- (void)setTitle:(id)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	_choices[section][item] = title;
+	_titles[section][item] = title;
+	
+	if (self.isViewLoaded)
+		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
+- (void)setDetail:(id)detail forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	_details[section][item] = detail;
 	
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
@@ -185,7 +239,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	CGFloat width = 0.0f, height = 0.0f;
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
-		if (_headers.count > section && [_headers[section] length] > 0 && [_choices[section] count] > 0)
+		if (_headers.count > section && [_headers[section] length] > 0 && [_titles[section] count] > 0)
         {
             CGFloat textWidth = [_headers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
             width = MAX(width, textWidth);
@@ -193,15 +247,20 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
         }
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
 		{
-			NSString *text = _choices[section][item];
-			if ([text isKindOfClass:NSAttributedString.class])
-				text = ((NSAttributedString *)text).string;
-			CGFloat textWidth = [text sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
+			id title = _titles[section][item];
+			if ([title isKindOfClass:NSAttributedString.class])
+				title = ((NSAttributedString *)title).string;
+			id detail = _details[section][item];
+			if (detail == NSNull.null)
+				detail = @"";
+			else if ([detail isKindOfClass:NSAttributedString.class])
+				detail = ((NSAttributedString *)detail).string;
+			CGFloat textWidth = [title sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width + [detail sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
 			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
 			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
 			height += cellSize.height;
 		}
-		if (_footers.count > section && [_footers[section] length] > 0 && [_choices[section] count] > 0)
+		if (_footers.count > section && [_footers[section] length] > 0 && [_titles[section] count] > 0)
         {
             CGFloat textWidth = [_footers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
             width = MAX(width, textWidth);
