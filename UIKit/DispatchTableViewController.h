@@ -29,5 +29,6 @@ extern NSString *const DispatchTableViewCellReuseIdentifier; // use this to regi
 
 - (void)setTitle:(id)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
 - (void)setDetail:(id)detail forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
+- (void)setAccessoryType:(UITableViewCellAccessoryType)accessoryType forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
 
 @end

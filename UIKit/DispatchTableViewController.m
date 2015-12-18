@@ -228,6 +228,13 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 
+- (void)setAccessoryType:(UITableViewCellAccessoryType)accessoryType forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	_accessoryTypes[section][item] = @( accessoryType );
+	if (self.isViewLoaded)
+		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
 @synthesize preferredContentSize=_preferredContentSize;
 - (CGSize)preferredContentSize
 {
