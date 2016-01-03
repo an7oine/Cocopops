@@ -104,11 +104,15 @@ static InAppPurchaseController *_sharedController;
 				[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 #endif
 				NSString *productIdentifier = transaction.payment.productIdentifier;
-				[queue finishTransaction:transaction];
-
 				SKProduct *product = _availableProducts[productIdentifier];
-				[_purchasedProductIdentifiers addObject:productIdentifier];
-				[[NSNotificationCenter defaultCenter] postNotificationName:InAppPurchaseProductPurchased object:self userInfo:@{ @"productIdentifier" : productIdentifier, @"product" : product }];
+
+				if (productIdentifier)
+				{
+					[_purchasedProductIdentifiers addObject:productIdentifier];
+					[[NSNotificationCenter defaultCenter] postNotificationName:InAppPurchaseProductPurchased object:self userInfo:@{ @"productIdentifier" : productIdentifier, @"product" : product ?: NSNull.null }];
+				}
+
+				[queue finishTransaction:transaction];
 				break;
 			}
 

@@ -149,7 +149,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	[_details[section] addObject:detail ?: NSNull.null];
 	[_accessoryTypes[section] addObject:@( accessoryType )];
 	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
-	[_blocks[section] addObject:block];
+	[_blocks[section] addObject:block ?: ^(NSIndexPath *indexPath){}];
 	
 	if (self.isViewLoaded)
 		[self.tableView insertRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:row inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
