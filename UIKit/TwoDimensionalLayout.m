@@ -199,7 +199,7 @@
 	_contentOrigin = activeFrame.origin;
 
 	for (UICollectionViewLayoutAttributes *attributes in _layoutAttributes.allValues)
-		attributes.frame = CGRectOffset(attributes.frame, -_contentOrigin.x, -_contentOrigin.y);
+		attributes.frame = CGRectOffset(attributes.frame, - self.contentOrigin.x, - self.contentOrigin.y);
 }
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
