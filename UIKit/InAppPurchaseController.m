@@ -15,6 +15,8 @@ NSString * const InAppPurchaseProductPurchased = @"InAppPurchaseProductPurchased
 {
 	NSMutableDictionary *_availableProducts;
 	NSMutableSet *_purchasedProductIdentifiers;
+
+	SKProductsRequest *_request;
 }
 
 @synthesize availableProducts=_availableProducts, purchasedProductIdentifiers=_purchasedProductIdentifiers;
@@ -40,9 +42,9 @@ static InAppPurchaseController *_sharedController;
 	if (SKPaymentQueue.canMakePayments)
 	{
 		NSArray *productIdentifiers = [NSArray arrayWithContentsOfURL:[NSBundle.mainBundle URLForResource:ITEM_CATALOGUE withExtension:@"plist"]];
-		SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productIdentifiers]];
-		request.delegate = self;
-		[request start];
+		_request = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productIdentifiers]];
+		_request.delegate = self;
+		[_request start];
 		NSLog(@"%@ : product request started", NSStringFromClass(self.class));
 	}
 
@@ -128,6 +130,7 @@ static InAppPurchaseController *_sharedController;
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
+	_request = nil;
 	NSLog(@"%@ : product request finished", NSStringFromClass(self.class));
 	for (SKProduct *product in response.products)
 	{
