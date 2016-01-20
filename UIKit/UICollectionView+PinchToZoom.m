@@ -65,14 +65,12 @@
 		[self.collectionViewLayout applyZoomFactor:minimumFactor];
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:minimumFactor gestureFinished:YES];
-		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 	}
 	else if (maximumFactor < 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:maximumFactor];
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:maximumFactor gestureFinished:YES];
-		[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 	}
 }
 
@@ -94,10 +92,6 @@
 
     [self.collectionViewLayout applyZoomFactor:factor];
     [self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
-
-	// redraw cell contents only once after the gesture ends
-    if (sender.state == UIGestureRecognizerStateEnded)
-        [self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 
 	// reset gesture scale each time it is applied to the content
 	sender.scale = 1;
@@ -130,7 +124,6 @@
     	self.transform = originalTransform;
     	[self.collectionViewLayout applyZoomFactor:factor];
 		[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
-    	[self.visibleCells makeObjectsPerformSelector:@selector(setNeedsDisplay)];
 
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetFactor gestureFinished:YES];
