@@ -84,19 +84,68 @@
 
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
 {
-	// clip gesture-originating target zoom factor to min, max limits
-	CGFloat factor = MIN( MAX(sender.scale, sender.factors.min / sender.factors.current), sender.factors.max / sender.factors.current );
-	sender.factors.current *= factor;
+	// when the gesture starts, assign the current zoom level into it
+	if (sender.state == UIGestureRecognizerStateBegan)
+		sender.scale *= sender.factors.current;
 
+	// get location of the gesture
 	CGPoint focusPoint = [sender locationInView:self];
 
-    [self.collectionViewLayout applyZoomFactor:factor];
-    [self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
+	// get the new (cumulative) zoom level proposed by the gesture
+	CGFloat newFactor = sender.scale;
+	
+	// validate that zoom level against client-defined upper and lower bounds
+	CGFloat clippedFactor = MIN( MAX(newFactor, sender.factors.min), sender.factors.max );
+	if (newFactor != clippedFactor)
+	{
+		// replace the gesture-proposed new zoom level with geometric mean
+		newFactor = sqrt(sender.scale * clippedFactor);
+	}
+	
+	// calculate the incremental adjustment needed to the collectionViewLayout and contentOffset
+	CGFloat transition = newFactor / sender.factors.current;
+	
+	// set as current, then apply
+	sender.factors.current = newFactor;
+    [self.collectionViewLayout applyZoomFactor:transition];
+    [self adjustContentOffsetForFocusPoint:focusPoint factor:transition];
 
-	// reset gesture scale each time it is applied to the content
-	sender.scale = 1;
+	// after the gesture has ended, clip back within the bounds if necessary
+	if (sender.state == UIGestureRecognizerStateEnded && clippedFactor != sender.factors.current)
+	{
+		// inform the delegate, but act as if the gesture was still active
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:NO];
+		
+		// then animate another zoom level transition (using a temporary scaling transform)
+		CGFloat clipToBounds = clippedFactor / sender.factors.current;
+		
+		CGAffineTransform originalTransform = self.transform;
+		
+		CGPoint translationPoint = CGPointMake(focusPoint.x - (self.contentOffset.x + 0.5f*self.frame.size.width), focusPoint.y - (self.contentOffset.y + 0.5f*self.frame.size.height));
+		CGAffineTransform transform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
+		transform = CGAffineTransformConcat(transform, CGAffineTransformMakeScale(clipToBounds, clipToBounds));
+		transform = CGAffineTransformConcat(transform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
+		
+		[UIView animateWithDuration:0.2f animations:^
+		{
+			self.transform = transform;
+		} completion:^(BOOL finished)
+		{
+			self.transform = originalTransform;
 
-	if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			sender.factors.current = clippedFactor;
+			[self.collectionViewLayout applyZoomFactor:clipToBounds];
+			[self adjustContentOffsetForFocusPoint:focusPoint factor:clipToBounds];
+			
+			// finally, inform the delegate of the finished gesture
+			if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+				[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:YES];
+		}];
+	}
+	
+	// otherwise (if the gesture is still active, or it has finished within the designated bounds), just inform the delegate
+	else if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 		[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:(sender.state == UIGestureRecognizerStateEnded)];
 }
 
