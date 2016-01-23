@@ -194,6 +194,9 @@
 				activeFrame = CGRectUnion(activeFrame, [layoutAttributes[indexPath] frame]);
         }
 
+	if (CGRectIsNull(activeFrame))
+		activeFrame = CGRectZero;
+
     _layoutAttributes = layoutAttributes;
 	_collectionViewContentSize = activeFrame.size;
 	_contentOrigin = activeFrame.origin;
