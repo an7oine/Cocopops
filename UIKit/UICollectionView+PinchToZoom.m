@@ -82,6 +82,29 @@
     self.contentOffset = CGPointMake(point.x - touchOffset.x, point.y - touchOffset.y);
 }
 
+- (void)animateZoomByFactor:(CGFloat)factor targetLevel:(CGFloat)targetLevel aroundPoint:(CGPoint)point
+{
+    CGAffineTransform originalTransform = self.transform;
+
+	CGPoint translationPoint = CGPointMake(point.x - self.contentOffset.x - 0.5f*self.frame.size.width, point.y - self.contentOffset.y - 0.5f*self.frame.size.height);
+	CGAffineTransform targetTransform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
+	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeScale(factor, factor));
+	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
+
+	[UIView animateWithDuration:0.2f delay:0.0f options:UIViewAnimationOptionCurveEaseInOut animations:^
+    {
+		self.transform = targetTransform;
+    } completion:^(BOOL finished)
+    {
+    	self.transform = originalTransform;
+    	[self.collectionViewLayout applyZoomFactor:factor];
+		[self adjustContentOffsetForFocusPoint:point factor:factor];
+
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetLevel gestureFinished:YES];
+    }];
+}
+
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
 {
 	// when the gesture starts, assign the current zoom level into it
@@ -117,31 +140,11 @@
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:NO];
 		
-		// then animate another zoom level transition (using a temporary scaling transform)
+		// then animate a zoom back within the bounds
 		CGFloat clipToBounds = clippedFactor / sender.factors.current;
 		
-		CGAffineTransform originalTransform = self.transform;
-		
-		CGPoint translationPoint = CGPointMake(focusPoint.x - (self.contentOffset.x + 0.5f*self.frame.size.width), focusPoint.y - (self.contentOffset.y + 0.5f*self.frame.size.height));
-		CGAffineTransform transform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
-		transform = CGAffineTransformConcat(transform, CGAffineTransformMakeScale(clipToBounds, clipToBounds));
-		transform = CGAffineTransformConcat(transform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
-		
-		[UIView animateWithDuration:0.2f animations:^
-		{
-			self.transform = transform;
-		} completion:^(BOOL finished)
-		{
-			self.transform = originalTransform;
-
-			sender.factors.current = clippedFactor;
-			[self.collectionViewLayout applyZoomFactor:clipToBounds];
-			[self adjustContentOffsetForFocusPoint:focusPoint factor:clipToBounds];
-			
-			// finally, inform the delegate of the finished gesture
-			if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-				[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:YES];
-		}];
+        sender.factors.current = clippedFactor;
+        [self animateZoomByFactor:clipToBounds targetLevel:clippedFactor aroundPoint:focusPoint];
 	}
 	
 	// otherwise (if the gesture is still active, or it has finished within the designated bounds), just inform the delegate
@@ -151,32 +154,14 @@
 
 - (IBAction)gotDoubleTapGesture:(CollectionZoomTapGestureRecognizer *)sender
 {
-    CGFloat targetFactor = sender.factors.current / sender.factors.max > sender.factors.min / sender.factors.current? sender.factors.min : sender.factors.max;
+    CGFloat targetLevel = sender.factors.current / sender.factors.max > sender.factors.min / sender.factors.current? sender.factors.min : sender.factors.max;
 	NSAssert(sender.factors.current != 0.0f, @"Invalid current zoom factor: sender.factors == %@", sender.factors);
-    CGFloat factor = targetFactor / sender.factors.current;
-	sender.factors.current = targetFactor;
-
-    CGPoint focusPoint = [sender locationInView:self];
-
-    CGAffineTransform originalTransform = self.transform;
-
-	CGPoint translationPoint = CGPointMake(focusPoint.x - self.contentOffset.x - 0.5f*self.frame.size.width, focusPoint.y - self.contentOffset.y - 0.5f*self.frame.size.height);
-	CGAffineTransform targetTransform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
-	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeScale(factor, factor));
-	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
-
-	[UIView animateWithDuration:0.2 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^
-    {
-		self.transform = targetTransform;
-    } completion:^(BOOL finished)
-    {
-    	self.transform = originalTransform;
-    	[self.collectionViewLayout applyZoomFactor:factor];
-		[self adjustContentOffsetForFocusPoint:focusPoint factor:factor];
-
-		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetFactor gestureFinished:YES];
-    }];
+    
+    CGFloat factor = targetLevel / sender.factors.current;
+    CGPoint point = [sender locationInView:self];
+    
+	sender.factors.current = targetLevel;
+    [self animateZoomByFactor:factor targetLevel:targetLevel aroundPoint:point];
 }
 
 @end
