@@ -63,46 +63,17 @@
 	if (minimumFactor > 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:minimumFactor];
+		[self adjustContentInsetToCentreContent];
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:minimumFactor gestureFinished:YES];
 	}
 	else if (maximumFactor < 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:maximumFactor];
+		[self adjustContentInsetToCentreContent];
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:maximumFactor gestureFinished:YES];
 	}
-}
-
-- (void)adjustContentOffsetForFocusPoint:(CGPoint)point factor:(CGFloat)factor
-{
-    CGPoint touchOffset = CGPointMake(point.x - self.contentOffset.x, point.y - self.contentOffset.y);
-    point.x *= factor;
-    point.y *= factor;
-    self.contentOffset = CGPointMake(point.x - touchOffset.x, point.y - touchOffset.y);
-}
-
-- (void)animateZoomByFactor:(CGFloat)factor targetLevel:(CGFloat)targetLevel aroundPoint:(CGPoint)point
-{
-    CGAffineTransform originalTransform = self.transform;
-
-	CGPoint translationPoint = CGPointMake(point.x - self.contentOffset.x - 0.5f*self.frame.size.width, point.y - self.contentOffset.y - 0.5f*self.frame.size.height);
-	CGAffineTransform targetTransform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
-	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeScale(factor, factor));
-	targetTransform = CGAffineTransformConcat(targetTransform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
-
-	[UIView animateWithDuration:0.2f delay:0.0f options:UIViewAnimationOptionCurveEaseInOut animations:^
-    {
-		self.transform = targetTransform;
-    } completion:^(BOOL finished)
-    {
-    	self.transform = originalTransform;
-    	[self.collectionViewLayout applyZoomFactor:factor];
-		[self adjustContentOffsetForFocusPoint:point factor:factor];
-
-		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetLevel gestureFinished:YES];
-    }];
 }
 
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
@@ -121,17 +92,19 @@
 	CGFloat clippedFactor = MIN( MAX(newFactor, sender.factors.min), sender.factors.max );
 	if (newFactor != clippedFactor)
 	{
-		// replace the gesture-proposed new zoom level with geometric mean
+		// replace the gesture-proposed out-of-spec zoom level with geometric mean (rubber band effect)
 		newFactor = sqrt(sender.scale * clippedFactor);
 	}
 	
-	// calculate the incremental adjustment needed to the collectionViewLayout and contentOffset
+	// calculate the incremental adjustment for collectionViewLayout and contentOffset
 	CGFloat transition = newFactor / sender.factors.current;
 	
 	// set as current, then apply
 	sender.factors.current = newFactor;
     [self.collectionViewLayout applyZoomFactor:transition];
+	
     [self adjustContentOffsetForFocusPoint:focusPoint factor:transition];
+	[self adjustContentInsetToCentreContent];
 
 	// after the gesture has ended, clip back within the bounds if necessary
 	if (sender.state == UIGestureRecognizerStateEnded && clippedFactor != sender.factors.current)
@@ -162,6 +135,56 @@
     
 	sender.factors.current = targetLevel;
     [self animateZoomByFactor:factor targetLevel:targetLevel aroundPoint:point];
+}
+
+- (void)adjustContentInsetToCentreContent
+{
+	UIEdgeInsets inset = self.contentInset;
+	
+	CGFloat horizontalInset = MAX(0.0f, self.bounds.size.width - self.contentSize.width);
+	inset.left = 0.5f * horizontalInset;
+	inset.right = 0.5f * horizontalInset;
+	
+	CGFloat verticalInset = MAX(0.0f, self.bounds.size.height - self.contentSize.height);
+	inset.top = MAX(self.scrollIndicatorInsets.top, 0.5f * verticalInset);
+	inset.bottom = MAX(self.scrollIndicatorInsets.bottom, 0.5f * verticalInset);
+	
+	self.contentInset = inset;
+}
+
+- (void)adjustContentOffsetForFocusPoint:(CGPoint)point factor:(CGFloat)factor
+{
+	CGPoint touchOffset = CGPointMake(point.x - self.contentOffset.x, point.y - self.contentOffset.y);
+	point.x *= factor;
+	point.y *= factor;
+	self.contentOffset = CGPointMake(point.x - touchOffset.x, point.y - touchOffset.y);
+}
+
+- (void)animateZoomByFactor:(CGFloat)factor targetLevel:(CGFloat)targetLevel aroundPoint:(CGPoint)point
+{
+	CGAffineTransform originalTransform = self.transform;
+	
+	CGPoint translationPoint = CGPointMake(point.x - self.contentOffset.x - 0.5f*self.frame.size.width, point.y - self.contentOffset.y - 0.5f*self.frame.size.height);
+	CGAffineTransform transitionalTransform = CGAffineTransformMakeTranslation(-translationPoint.x, -translationPoint.y);
+	transitionalTransform = CGAffineTransformConcat(transitionalTransform, CGAffineTransformMakeScale(factor, factor));
+	transitionalTransform = CGAffineTransformConcat(transitionalTransform, CGAffineTransformMakeTranslation(translationPoint.x, translationPoint.y));
+
+	[UIView animateWithDuration:0.2f delay:0.0f options:UIViewAnimationOptionCurveEaseInOut animations:^
+	{
+		self.transform = transitionalTransform;
+	} completion:^(BOOL finished)
+	{
+		self.transform = originalTransform;
+		[self.collectionViewLayout applyZoomFactor:factor];
+		 
+		[self adjustContentOffsetForFocusPoint:point factor:factor];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self adjustContentInsetToCentreContent];
+		});
+		 
+		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:targetLevel gestureFinished:YES];
+	}];
 }
 
 @end
