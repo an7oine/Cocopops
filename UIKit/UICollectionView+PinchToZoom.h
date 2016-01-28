@@ -4,6 +4,9 @@
 
 #import <UIKit/UIKit.h>
 
+// uncomment to enable zooming in response to 3D Touch gestures (buggy)
+//#define ENABLE_3D_TOUCH_GESTURE
+
 @interface UICollectionView (PinchToZoom)
 
 /**
@@ -14,7 +17,7 @@ Enable Pinch-to-Zoom and Double-Tap-to-Zoom gestures for a collection view. Call
 - (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor;
 
 /**
-Adjust @c self.contentInset to place content in the middle of @c self.bounds. Called automatically in response to zoom-related events, but callable also directly from client code, in response to e.g. -[UIViewController viewWillLayoutSubviews].
+Adjust @c self.contentInset to place content in the middle of self.bounds. Called automatically in response to zoom-related events, but callable also directly from client code, e.g. from -[UIViewController viewWillLayoutSubviews].
  */
 - (void)adjustContentInsetToCentreContent;
 
