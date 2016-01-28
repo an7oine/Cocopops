@@ -39,7 +39,6 @@
 @property (nonatomic) ZoomFactors *factors;
 @property (nonatomic) CGFloat threshold;
 @property (nonatomic) CGFloat originalLevel;
-@property (nonatomic) CGPoint originalPoint;
 @property (nonatomic) CGFloat scale;
 @end
 @implementation CollectionZoomForceTouchGestureRecognizer
@@ -139,8 +138,7 @@
 	if (sender.state == UIGestureRecognizerStateBegan)
 		sender.scale *= sender.factors.current;
 
-	// get location and scale of the gesture
-	CGPoint point = [sender locationInView:self];
+	// get scale of the gesture
 	CGFloat level = sender.scale;
 	
 	// clip against client-defined upper and lower zoom level bounds
@@ -152,13 +150,13 @@
 	}
 	
 	// assign the current level
-	point = [self setZoomLevel:level aroundPoint:point withFactors:sender.factors animated:NO finished:NO];
+	[self setZoomLevel:level aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:NO finished:NO];
 
 	if (sender.state == UIGestureRecognizerStateEnded)
 	{
 		// animate a zoom back within the bounds, if necessary
 		if (clippedLevel != sender.factors.current)
-        	[self setZoomLevel:clippedLevel aroundPoint:point withFactors:sender.factors animated:YES finished:YES];
+        	[self setZoomLevel:clippedLevel aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:YES];
 		
 		// otherwise, just inform the delegate
 		else if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
@@ -171,26 +169,20 @@
     CGFloat targetLevel = sender.factors.current / sender.factors.max > sender.factors.min / sender.factors.current? sender.factors.min : sender.factors.max;
 	NSAssert(sender.factors.current != 0.0f, @"Invalid current zoom factor: sender.factors == %@", sender.factors);
     
-    CGPoint point = [sender locationInView:self];
-	[self setZoomLevel:targetLevel aroundPoint:point withFactors:sender.factors animated:YES finished:YES];
+	[self setZoomLevel:targetLevel aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:YES];
 }
 
 - (IBAction)gotForceTouchGesture:(CollectionZoomForceTouchGestureRecognizer *)sender
 {
 	// get location of the gesture
-	CGPoint point = [sender locationInView:self];
-	if (sender.state != UIGestureRecognizerStateBegan)
-		point = CGPointMake(sender.originalPoint.x * sender.factors.current / sender.originalLevel, sender.originalPoint.y * sender.factors.current / sender.originalLevel);
-	
 	CGFloat level = sender.scale*sender.scale*sender.scale * sender.factors.max * 1.1f;
 
 	if (sender.state == UIGestureRecognizerStateBegan)
 	{
 		sender.originalLevel = sender.factors.current;
-		sender.originalPoint = point;
 		
 		if (level > sender.originalLevel)
-			[self setZoomLevel:level aroundPoint:point withFactors:sender.factors animated:YES finished:NO];
+			[self setZoomLevel:level aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:NO];
 	}
 	else if (sender.state == UIGestureRecognizerStateChanged)
 	{
@@ -203,11 +195,11 @@
 		}
 
 		if (level > sender.originalLevel)
-			[self setZoomLevel:level aroundPoint:point withFactors:sender.factors animated:NO finished:NO];
+			[self setZoomLevel:level aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:NO finished:NO];
 	}
 	else if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateFailed || sender.state == UIGestureRecognizerStateCancelled)
 	{
-		[self setZoomLevel:sender.originalLevel aroundPoint:point withFactors:sender.factors animated:YES finished:YES];
+		[self setZoomLevel:sender.originalLevel aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:YES];
 	}
 }
 
