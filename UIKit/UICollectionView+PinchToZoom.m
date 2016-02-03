@@ -132,6 +132,16 @@
 	}
 }
 
+- (void)setZoomFactor:(CGFloat)zoomFactor animated:(BOOL)animated
+{
+	ZoomFactors *factors = nil;
+	for (CollectionZoomPinchGestureRecognizer *gestureRecogniser in self.gestureRecognizers)
+		if ([gestureRecogniser isKindOfClass:CollectionZoomPinchGestureRecognizer.class])
+			factors = gestureRecogniser.factors;
+	if (factors)
+		[self setZoomLevel:zoomFactor aroundPoint:CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds)) withFactors:factors animated:animated finished:YES];
+}
+
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
 {
 	// start from the current zoom level

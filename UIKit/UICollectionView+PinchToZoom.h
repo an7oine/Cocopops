@@ -17,6 +17,11 @@ Enable Pinch-to-Zoom and Double-Tap-to-Zoom gestures for a collection view. Call
 - (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor;
 
 /**
+Manually set zoom level to the given number
+ */
+- (void)setZoomFactor:(CGFloat)zoomFactor animated:(BOOL)animated;
+
+/**
 Adjust @c self.contentInset to place content in the middle of self.bounds. Called automatically in response to zoom-related events, but callable also directly from client code, e.g. from -[UIViewController viewWillLayoutSubviews].
  */
 - (void)adjustContentInsetToCentreContent;
