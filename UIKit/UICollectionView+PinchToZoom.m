@@ -211,9 +211,9 @@
 	inset.left = 0.5f * horizontalInset;
 	inset.right = 0.5f * horizontalInset;
 	
-	CGFloat verticalInset = MAX(0.0f, self.bounds.size.height - self.contentSize.height);
-	inset.top = MAX(self.scrollIndicatorInsets.top, 0.5f * verticalInset);
-	inset.bottom = MAX(self.scrollIndicatorInsets.bottom, 0.5f * verticalInset);
+	CGFloat verticalInset = MAX(0.0f, self.bounds.size.height - self.contentSize.height - (self.scrollIndicatorInsets.top + self.scrollIndicatorInsets.bottom));
+	inset.top = self.scrollIndicatorInsets.top + 0.5f * verticalInset;
+	inset.bottom = self.scrollIndicatorInsets.bottom + 0.5f * verticalInset;
 	
 	self.contentInset = inset;
 }
