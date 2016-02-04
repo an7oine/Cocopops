@@ -9,6 +9,7 @@
 
 @interface ZoomFactors : NSObject
 @property (nonatomic) CGFloat min, max, current;
+@property (nonatomic) BOOL centreAutomatically;
 @end
 @implementation ZoomFactors
 - (instancetype)initWithMinimum:(CGFloat)min maximum:(CGFloat)max
@@ -91,9 +92,10 @@
 
 @implementation UICollectionView (PinchToZoom)
 
-- (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor
+- (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor centreAutomatically:(BOOL)centreAutomatically
 {
 	ZoomFactors *factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
+	factors.centreAutomatically = centreAutomatically;
 
 	CollectionZoomPinchGestureRecognizer *pinchRecognizer = [[CollectionZoomPinchGestureRecognizer alloc] initWithTarget:self action:@selector(gotPinchToZoomGesture:)];
 	[self addGestureRecognizer:pinchRecognizer];
@@ -119,14 +121,18 @@
 	if (minimumFactor > 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:minimumFactor];
-		[self adjustContentInsetToCentreContent];
+		if (factors.centreAutomatically)
+			[self adjustContentInsetToCentreContent];
+		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:minimumFactor gestureFinished:YES];
 	}
 	else if (maximumFactor < 1.0f)
 	{
 		[self.collectionViewLayout applyZoomFactor:maximumFactor];
-		[self adjustContentInsetToCentreContent];
+		if (factors.centreAutomatically)
+			[self adjustContentInsetToCentreContent];
+		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:maximumFactor gestureFinished:YES];
 	}
@@ -261,7 +267,8 @@
 			
 			dispatch_async(dispatch_get_main_queue(), ^
 			{
-				[self adjustContentInsetToCentreContent];
+				if (factors.centreAutomatically)
+					[self adjustContentInsetToCentreContent];
 
 				if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 					[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:level gestureFinished:finished];
@@ -272,7 +279,9 @@
 	{
 		[self.collectionViewLayout applyZoomFactor:factor];
 		[self adjustContentOffsetForFocusPoint:point factor:factor];
-		[self adjustContentInsetToCentreContent];
+		if (factors.centreAutomatically)
+			[self adjustContentInsetToCentreContent];
+		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:level gestureFinished:finished];
 	}

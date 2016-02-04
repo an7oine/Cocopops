@@ -13,11 +13,12 @@
 Enable Pinch-to-Zoom and Double-Tap-to-Zoom gestures for a collection view. Call only once per view, e.g. from within -[UIViewController viewDidLoad].
 @param minimumFactor Minimum (farthest) allowed zoom level, where 1.0f is a 1:1 ratio
 @param maximumFactor Maximum (closest) allowed zoom level, which must be @c >= @c self.minimumfactor
+@param centreAutomatically Pass YES to enable automatic content centring
  */
-- (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor;
+- (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor centreAutomatically:(BOOL)centreAutomatically;
 
 /**
-Manually set zoom level to the given number
+Manually set zoom level.
  */
 - (void)setZoomFactor:(CGFloat)zoomFactor animated:(BOOL)animated;
 
