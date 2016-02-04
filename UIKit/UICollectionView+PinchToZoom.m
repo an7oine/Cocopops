@@ -125,7 +125,7 @@
 			[self adjustContentInsetToCentreContent];
 		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:minimumFactor gestureFinished:YES];
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:minimumFactor toLevel:minimumFactor gestureFinished:YES];
 	}
 	else if (maximumFactor < 1.0f)
 	{
@@ -134,10 +134,21 @@
 			[self adjustContentInsetToCentreContent];
 		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:maximumFactor gestureFinished:YES];
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:maximumFactor toLevel:maximumFactor gestureFinished:YES];
 	}
 }
 
+- (CGFloat)zoomFactor
+{
+	ZoomFactors *factors = nil;
+	for (CollectionZoomPinchGestureRecognizer *gestureRecogniser in self.gestureRecognizers)
+		if ([gestureRecogniser isKindOfClass:CollectionZoomPinchGestureRecognizer.class])
+			factors = gestureRecogniser.factors;
+	if (factors)
+		return factors.current;
+	else
+		return 1.0f;
+}
 - (void)setZoomFactor:(CGFloat)zoomFactor animated:(BOOL)animated
 {
 	ZoomFactors *factors = nil;
@@ -166,6 +177,7 @@
 	}
 	
 	// assign the current level
+	CGFloat oldLevel = sender.factors.current;
 	[self setZoomLevel:level aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:NO finished:NO];
 
 	if (sender.state == UIGestureRecognizerStateEnded)
@@ -176,7 +188,7 @@
 		
 		// otherwise, just inform the delegate
 		else if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:sender.factors.current gestureFinished:YES];
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:sender.factors.current/oldLevel toLevel:sender.factors.current gestureFinished:YES];
 	}
 }
 
@@ -271,7 +283,7 @@
 					[self adjustContentInsetToCentreContent];
 
 				if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-					[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:level gestureFinished:finished];
+					[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:factor toLevel:level gestureFinished:finished];
 			});
 		}];
 	}
@@ -283,7 +295,7 @@
 			[self adjustContentInsetToCentreContent];
 		
 		if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
-			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didSetZoomFactor:level gestureFinished:finished];
+			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:factor toLevel:level gestureFinished:finished];
 	}
 	
 	return CGPointMake(point.x * factor, point.y * factor);

@@ -18,6 +18,11 @@ Enable Pinch-to-Zoom and Double-Tap-to-Zoom gestures for a collection view. Call
 - (void)enableZoomGesturesWithMinimumFactor:(CGFloat)minimumFactor maximumFactor:(CGFloat)maximumFactor centreAutomatically:(BOOL)centreAutomatically;
 
 /**
+Get current zoom level.
+ */
+- (CGFloat)zoomFactor;
+
+/**
 Manually set zoom level.
  */
 - (void)setZoomFactor:(CGFloat)zoomFactor animated:(BOOL)animated;
@@ -47,6 +52,6 @@ Implement to react when the zoom level changes.
 @param zoomFactor The new level
 @param gestureFinished @c YES if the gesture (pinch or double-tap) has finished and no more level changes (animated or user-requested) will occur, @c NO otherwise
  */
-- (void)collectionView:(UICollectionView *)collectionView didSetZoomFactor:(CGFloat)zoomFactor gestureFinished:(BOOL)gestureFinished;
+- (void)collectionView:(UICollectionView *)collectionView didApplyZoomFactor:(CGFloat)factor toLevel:(CGFloat)level gestureFinished:(BOOL)gestureFinished;
 
 @end
