@@ -6,6 +6,8 @@
 
 NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellReuseIdentifier";
 
+#pragma mark - Styled cell classes
+
 @interface SubtitleStyleTableViewCell : UITableViewCell @end
 @implementation SubtitleStyleTableViewCell
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:reuseIdentifier]; }
@@ -21,7 +23,14 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleValue2 reuseIdentifier:reuseIdentifier]; }
 @end
 
+
+#pragma mark - Initialisation
+
 @implementation DispatchTableViewController
+{
+	CGFloat _originalHeaderHeight, _originalFooterHeight;
+}
+
 - (instancetype)init
 {
 	if (! (self = [super init]))
@@ -36,10 +45,12 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	[self clearContent];
 	return self;
 }
-- (void)loadView
-{
-	self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
 
+
+#pragma mark - View lifetime
+
+- (void)viewDidLoad
+{
 	Class cellClass = UITableViewCell.class;
 	switch (self.cellStyle)
 	{
@@ -50,10 +61,14 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	}
 	[self.tableView registerClass:cellClass forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
 
-	self.tableView.delegate = self;
-	self.tableView.dataSource = self;
-	self.view = self.tableView;
+	_originalHeaderHeight = self.tableView.sectionHeaderHeight;
+	_originalFooterHeight = self.tableView.sectionFooterHeight;
+	if (self.tableView.style == UITableViewStyleGrouped)
+		self.tableView.sectionHeaderHeight = self.tableView.sectionFooterHeight = 0.0f;
 }
+
+
+#pragma mark - Table view dataSource & delegate
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
@@ -63,14 +78,17 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 {
 	return [_titles[section] count];
 }
+
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
 	return _headers.count > section && [_titles[section] count] > 0? _headers[section] : nil;
 }
+
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
 	return _footers.count > section && [_titles[section] count] > 0? _footers[section] : nil;
 }
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
@@ -90,6 +108,7 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
 }
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	void (^block)(NSIndexPath *indexPath) = self.blocks[indexPath.section][indexPath.item];
@@ -97,6 +116,27 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		block(indexPath);
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
+
+
+#pragma mark - Section header/footer height manipulation (in grouped style tables)
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (tableView.style == UITableViewStylePlain || section==0 || [self tableView:tableView numberOfRowsInSection:section] > 0)
+        return _originalHeaderHeight;
+    else
+        return 0.0f;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    if (tableView.style == UITableViewStylePlain || section==[self numberOfSectionsInTableView:tableView]-1 || [self tableView:tableView numberOfRowsInSection:section] > 0)
+        return _originalFooterHeight;
+    else
+        return 0.0f;
+}
+
+
+#pragma mark - Public methods
 
 - (void)clearContent
 {
@@ -235,6 +275,9 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 
+
+#pragma mark - Content size calculation
+
 @synthesize preferredContentSize=_preferredContentSize;
 - (CGSize)preferredContentSize
 {
@@ -244,6 +287,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 	UIFont *cellFont = [UITableViewCell new].textLabel.font; // get the font from a dummy cell (17.0f point)
 
 	CGFloat width = 0.0f, height = 0.0f;
+
+	if (self.tableView.style == UITableViewStyleGrouped)
+		height += _originalFooterHeight;
+
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
 		if (_headers.count > section && [_headers[section] length] > 0 && [_titles[section] count] > 0)
@@ -252,6 +299,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
             width = MAX(width, textWidth);
 			height += [self.tableView rectForHeaderInSection:section].size.height;
         }
+		else if (self.tableView.style == UITableViewStyleGrouped)
+		{
+			height += [self.tableView rectForHeaderInSection:section].size.height;
+		}
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
 		{
 			id title = _titles[section][item];
@@ -273,7 +324,14 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
             width = MAX(width, textWidth);
             height += [self.tableView rectForFooterInSection:section].size.height;
         }
+		else if (self.tableView.style == UITableViewStyleGrouped)
+		{
+            height += [self.tableView rectForFooterInSection:section].size.height;
+		}
 	}
+	
+	if (self.tableView.style == UITableViewStyleGrouped)
+		height += _originalHeaderHeight;
 
 #if TARGET_OS_TV
 	height += cellFont.pointSize * 2.5f;
@@ -281,6 +339,9 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 	return CGSizeMake(width, height);
 }
+
+
+#pragma mark - tvOS support
 
 #if TARGET_OS_TV
 - (UIView *)preferredFocusedView
