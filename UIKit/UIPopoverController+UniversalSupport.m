@@ -7,14 +7,19 @@
 #import "UIApplication+KeyboardFrame.h"
 
 
-// Graphical properties of popovers displayed on the iPhone:
+#pragma mark - Graphical properties for popovers on phones
 
 #define MINIMUM_SIZE 0.8f	// minimum size of the displayed popover, fraction of each dimension
 #define ARROW_SIZE 10.0f	// height (width) of the arrow when pointing up or down (left or right)
 #define CORNER_SIZE 6.0f	// height and width of the rounded corners applied to popover content
 
 
-UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrientation deviceOrientation)
+#pragma mark - Helpers
+
+/**
+Convert UIDeviceOrientation values to their UIInterfaceOrientation counterparts
+ */
+UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrientation deviceOrientation)
 {
 	switch (deviceOrientation)
 	{
@@ -30,6 +35,8 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 }
 
 
+#pragma mark - Universal extension for UIPopoverController
+
 @interface PhonePopoverController : UIPopoverController @end
 
 @implementation UIPopoverController (UniversalSupport)
@@ -41,6 +48,9 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 		return [[PhonePopoverController alloc] initWithContentViewController:contentViewController];
 }
 @end
+
+
+#pragma mark - Phone popover internals
 
 @implementation PhonePopoverController
 {
@@ -60,13 +70,16 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	BOOL _registeredForPreferredContentSizeObserving;
 }
 
-+ (BOOL)_popoversDisabled { return NO; } // override super's behaviour
++ (BOOL)_popoversDisabled { return NO; } // override super's preclusion on iPhone
 
 @synthesize popoverLayoutMargins=_popoverLayoutMargins;
 @synthesize popoverVisible=_popoverVisible;
 @synthesize popoverArrowDirection=_popoverArrowDirection;
-@synthesize popoverContentSize=_popoverContentSize;
 
+
+#pragma mark - Popover content size getter & setters
+
+@synthesize popoverContentSize=_popoverContentSize;
 - (CGSize)popoverContentSize
 {
 	return _popoverContentSize.width > 0.0f && _popoverContentSize.height > 0.0f? _popoverContentSize : self.contentViewController.preferredContentSize;
@@ -91,12 +104,33 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 }
 
 
+#pragma mark - Content view controller getter & setters
+
+@synthesize contentViewController=_contentViewController; // bypass super's too-complicated implementation
+- (void)setContentViewController:(UIViewController *)contentViewController
+{
+	[self setContentViewController:contentViewController animated:NO];
+}
+- (void)setContentViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+	BOOL wasVisible = _popoverVisible;
+	if (wasVisible)
+		[self dismissPopoverAnimated:NO];
+	
+	_contentViewController = viewController;
+	
+	if (wasVisible)
+		[self presentPopoverAnimated:NO];
+}
+
+
 #pragma mark - Initialising
 
 - (instancetype)initWithContentViewController:(UIViewController *)viewController
 {
 	if (! (self = [super initWithContentViewController:viewController]))
 		return nil;
+	_contentViewController = viewController;
 	_popoverLayoutMargins = UIEdgeInsetsMake(10.0f, 10.0f, 10.0f, 10.0f);
 	_popoverVisible = NO;
 	_popoverArrowDirection = UIPopoverArrowDirectionUnknown;
@@ -385,7 +419,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	*/
 
 	UIDeviceOrientation deviceOrientation = UIDevice.currentDevice.orientation;
-	UIInterfaceOrientation interfaceOrientation = UInterfaceOrientationWithDeviceOrientation(deviceOrientation);
+	UIInterfaceOrientation interfaceOrientation = UIInterfaceOrientationWithDeviceOrientation(deviceOrientation);
 
 	_deviceOrientation = deviceOrientation;
 	[self.contentViewController willRotateToInterfaceOrientation:interfaceOrientation duration:0.3f];
@@ -424,7 +458,7 @@ UIInterfaceOrientation UInterfaceOrientationWithDeviceOrientation(UIDeviceOrient
 	_deviceOrientation = UIDevice.currentDevice.orientation;
 	if (_deviceOrientation == UIDeviceOrientationUnknown)
 		_deviceOrientation = UIDeviceOrientationPortrait;
-	_interfaceOrientation = UInterfaceOrientationWithDeviceOrientation(_deviceOrientation);
+	_interfaceOrientation = UIInterfaceOrientationWithDeviceOrientation(_deviceOrientation);
 
 	// set to receive updates of device orientation
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
