@@ -316,7 +316,10 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 			CGFloat textWidth = [title sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width + [detail sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
 			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
 			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
-			height += cellSize.height;
+            if ([self respondsToSelector:@selector(tableView:heightForRowAtIndexPath:)])
+                height += [self tableView:self.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]];
+            else
+                height += cellSize.height;
 		}
 		if (_footers.count > section && [_footers[section] length] > 0 && [_titles[section] count] > 0)
         {
