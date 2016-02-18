@@ -51,6 +51,8 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 - (void)viewDidLoad
 {
+    [super viewDidLoad];
+
 	Class cellClass = UITableViewCell.class;
 	switch (self.cellStyle)
 	{
