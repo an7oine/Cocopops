@@ -36,6 +36,7 @@
 @implementation CollectionZoomTapGestureRecognizer
 @end
 
+#if __IPHONE_9_0
 @interface CollectionZoomForceTouchGestureRecognizer : UIGestureRecognizer
 @property (nonatomic) ZoomFactors *factors;
 @property (nonatomic) CGFloat threshold;
@@ -76,7 +77,7 @@
         self.state = UIGestureRecognizerStateCancelled;
 }
 @end
-
+#endif
 
 @implementation UICollectionViewFlowLayout (ZoomFactor)
 - (void)applyZoomFactor:(CGFloat)zoomFactor
@@ -200,6 +201,7 @@
 	[self setZoomLevel:targetLevel aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:YES];
 }
 
+#if __IPHONE_9_0
 - (IBAction)gotForceTouchGesture:(CollectionZoomForceTouchGestureRecognizer *)sender
 {
 	// get location of the gesture
@@ -230,6 +232,7 @@
 		[self setZoomLevel:sender.originalLevel aroundPoint:[sender locationInView:self] withFactors:sender.factors animated:YES finished:YES];
 	}
 }
+#endif
 
 - (void)adjustContentInsetToCentreContent
 {
