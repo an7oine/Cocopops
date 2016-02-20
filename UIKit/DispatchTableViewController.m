@@ -124,14 +124,18 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
-    if (tableView.style == UITableViewStylePlain || section==0 || [self tableView:tableView numberOfRowsInSection:section] > 0)
+    if (_headers.count > section && [_headers[section] length] > 0 && [_titles[section] count] > 0)
+        return _originalHeaderHeight;
+    else if (self.tableView.style == UITableViewStyleGrouped)
         return _originalHeaderHeight;
     else
         return 0.0f;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
-    if (tableView.style == UITableViewStylePlain || section==[self numberOfSectionsInTableView:tableView]-1 || [self tableView:tableView numberOfRowsInSection:section] > 0)
+    if (_footers.count > section && [_footers[section] length] > 0 && [_titles[section] count] > 0)
+        return _originalFooterHeight;
+    else if (self.tableView.style == UITableViewStyleGrouped)
         return _originalFooterHeight;
     else
         return 0.0f;
