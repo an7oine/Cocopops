@@ -26,20 +26,25 @@ typedef struct
 {
     NSString *machineString = self.machineString;
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(iPod|iPhone|iPad|AppleTV)([0-9]+),([0-9]+)" options:0 error:NULL];
-    NSArray *c = [regex matchesInString:machineString options:0 range:NSMakeRange(0, machineString.length)];
-    if (c.count >= 3)
+    NSTextCheckingResult *c = [regex firstMatchInString:machineString options:0 range:NSMakeRange(0, machineString.length)];
+    if (c)
+	{
+		NSString *kind = [machineString substringWithRange:[c rangeAtIndex:1]];
+		NSString *major = [machineString substringWithRange:[c rangeAtIndex:2]];
+		NSString *minor = [machineString substringWithRange:[c rangeAtIndex:3]];
         return (machine_t)
-    {
-        [c[0] isEqualToString:@"iPod"]?		kMachinePod :
-        [c[0] isEqualToString:@"iPhone"]?	kMachinePhone :
-		[c[0] isEqualToString:@"iPad"]?		kMachinePad :
-		[c[0] isEqualToString:@"AppleTV"]?	kMachineTV :
-											kMachineSimulator,
-        [c[1] shortValue],
-        [c[2] shortValue]
-    };
+		{
+			.kind = [kind isEqualToString:@"iPod"]?		kMachinePod :
+			[kind isEqualToString:@"iPhone"]?	kMachinePhone :
+			[kind isEqualToString:@"iPad"]?		kMachinePad :
+			[kind isEqualToString:@"AppleTV"]?	kMachineTV :
+												kMachineSimulator,
+			.major = [major integerValue],
+			.minor = [minor integerValue]
+		};
+	}
     else
-        return (machine_t){ kMachineSimulator };
+        return (machine_t){ .kind = kMachineSimulator };
 }
 
 - (CGFloat)pointsPerInch
@@ -73,7 +78,7 @@ typedef struct
 	
     else if (machine.kind != kMachinePad)
         // iPhone, 3G, 3GS / iPod Touch 1st, 2nd, or 3rd gen: single pixels
-        // iPhone / iPod Touch (all later models): double pixels, 326 pixels-per-inch
+        // iPhone / iPod Touch (all later non-Plus models): double pixels, 326 pixels-per-inch
         return 163.0f;
     
     else if (machine.major == 2 && machine.minor >= 5 && machine.minor <= 7)
