@@ -4,7 +4,15 @@
 
 #import <UIKit/UIKit.h>
 
-extern NSString *const DispatchTableViewCellReuseIdentifier; // use this to register a custom subclass or NIB for the dispatch cells
+/**
+The reuse identifier used when dequeuing dispatch cells; you can register a custom subclass or NIB, if needed
+ */
+extern NSString *const DispatchTableViewCellReuseIdentifier;
+
+/**
+An additional cell accessory style, resulting in a blank space the size of a regular built-in accessory
+ */
+extern UITableViewCellAccessoryType const UITableViewCellAccessoryBlank;
 
 @interface DispatchTableViewController : UITableViewController
 

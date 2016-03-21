@@ -6,6 +6,8 @@
 
 NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellReuseIdentifier";
 
+UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewCellAccessoryType)32767;
+
 #pragma mark - Styled cell classes
 
 @interface SubtitleStyleTableViewCell : UITableViewCell @end
@@ -106,7 +108,19 @@ NSString *const DispatchTableViewCellReuseIdentifier = @"DispatchTableViewCellRe
 		cell.detailTextLabel.attributedText = detail;
 	else
 		cell.detailTextLabel.text = detail;
-	cell.accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
+	
+	UITableViewCellAccessoryType accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
+	if (accessoryType == UITableViewCellAccessoryBlank)
+	{
+		cell.accessoryType = UITableViewCellAccessoryNone;
+		cell.accessoryView = [[UIView alloc] initWithFrame:CGRectZero];
+	}
+	else
+	{
+		cell.accessoryType = accessoryType;
+		cell.accessoryView = nil;
+	}
+	
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
 }
