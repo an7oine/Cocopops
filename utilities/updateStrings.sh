@@ -16,12 +16,13 @@ dev_language="$2"
 # treat rest of command line as references to source material
 shift 2
 
-# re-generate strings (in the development language) for storyboard files first
+# re-generate any existing .strings (in the development language) for storyboard files
 for storyboard
  do
 	[[ "$storyboard" =~ .storyboard ]] || break
 	shift
-	ibtool --generate-strings-file "${localisation_dir}/${dev_language}.lproj/$( basename "${storyboard}" .storyboard ).strings" "$storyboard"
+	strings="${localisation_dir}/${dev_language}.lproj/$( basename "${storyboard}" .storyboard ).strings"
+	[ -s "$strings" ] && ibtool --generate-strings-file "$strings" "$storyboard"
 done
 
 # then re-generate strings (in the development language) for all remaining files
