@@ -41,7 +41,7 @@
 {
 	if (context != (__bridge void *)UserDefaultsSwitch.class)
 		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-	else if ([keyPath isEqualToString:self.userDefaultsKeyPath])
+	else if ([keyPath isEqualToString:self.userDefaultsKeyPath] && [change[NSKeyValueChangeNewKey] respondsToSelector:@selector(boolValue)])
 		self.on = [change[NSKeyValueChangeNewKey] boolValue];
 }
 
