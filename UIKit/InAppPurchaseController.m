@@ -95,7 +95,7 @@ static InAppPurchaseController *_sharedController;
 #if ! TARGET_OS_TV
 				[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 #endif
-				NSLog(@"Failed transaction: %@ (%@)", transaction, @(transaction.transactionState));
+				NSLog(@"Failed transaction: %@", transaction.error.localizedFailureReason);
 				[queue finishTransaction:transaction];
 				break;
 

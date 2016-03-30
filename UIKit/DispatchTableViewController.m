@@ -109,17 +109,28 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	else
 		cell.detailTextLabel.text = detail;
 	
-	UITableViewCellAccessoryType accessoryType = [_accessoryTypes[indexPath.section][indexPath.row] integerValue];
-	if (accessoryType == UITableViewCellAccessoryBlank)
+	id accessory = _accessoryTypes[indexPath.section][indexPath.row];
+	if ([accessory isKindOfClass:UIView.class])
 	{
 		cell.accessoryType = UITableViewCellAccessoryNone;
-		cell.accessoryView = [[UIView alloc] initWithFrame:CGRectZero];
+		cell.accessoryView = accessory;
+	}
+	else if ([accessory isKindOfClass:NSNumber.class])
+	{
+		UITableViewCellAccessoryType accessoryType = [accessory integerValue];
+		if (accessoryType == UITableViewCellAccessoryBlank)
+		{
+			cell.accessoryType = UITableViewCellAccessoryNone;
+			cell.accessoryView = [[UIView alloc] initWithFrame:CGRectZero];
+		}
+		else
+		{
+			cell.accessoryType = accessoryType;
+			cell.accessoryView = nil;
+		}
 	}
 	else
-	{
-		cell.accessoryType = accessoryType;
-		cell.accessoryView = nil;
-	}
+		NSAssert(NO, @"Accessories must be either UIView objects or numbered standard accessory identifiers");
 	
 	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
 	return cell;
@@ -188,7 +199,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 		_footers[section] = footer;
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title detail:(NSString *)detail accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title detail:(NSString *)detail accessoryView:(UIView *)accessoryView backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
 {
 	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
 	NSAssert(! detail || [detail isKindOfClass:NSString.class] || [detail isKindOfClass:NSAttributedString.class], @"'detail' must be an instance of NSString or NSAttributedString !");
@@ -207,7 +218,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	NSInteger row = [_titles[section] count];
 	[_titles[section] addObject:title];
 	[_details[section] addObject:detail ?: NSNull.null];
-	[_accessoryTypes[section] addObject:@( accessoryType )];
+	[_accessoryTypes[section] addObject:accessoryView];
 	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
 	[_blocks[section] addObject:block ?: ^(NSIndexPath *indexPath){}];
 	
@@ -215,6 +226,11 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 		[self.tableView insertRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:row inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 	
 	return row;
+}
+
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(id)title detail:(NSString *)detail accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
+{
+	return [self addChoiceIntoSection:section withTitle:title detail:detail accessoryView:(UIView *)@( accessoryType ) backgroundColour:backgroundColour block:block];
 }
 
 - (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
@@ -241,7 +257,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[_titles[section] removeObjectAtIndex:item];
 	id detail = _details[section][item];
 	[_details[section] removeObjectAtIndex:item];
-	NSNumber *accessoryType = _accessoryTypes[section][item];
+	id accessoryType = _accessoryTypes[section][item];
 	[_accessoryTypes[section] removeObjectAtIndex:item];
 	UIColor *backgroundColour = _backgroundColours[section][item];
 	[_backgroundColours[section] removeObjectAtIndex:item];
@@ -269,7 +285,11 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[_blocks[section] removeObjectAtIndex:item];
 	
 	if (self.isViewLoaded)
+	{
 		[self.tableView deleteRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+		if ([_titles[section] count] == 0)
+			[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:section] withRowAnimation:UITableViewRowAnimationAutomatic];
+	}
 }
 
 - (void)setTitle:(id)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item
@@ -291,6 +311,13 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 - (void)setAccessoryType:(UITableViewCellAccessoryType)accessoryType forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
 	_accessoryTypes[section][item] = @( accessoryType );
+	if (self.isViewLoaded)
+		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
+- (void)setAccessoryView:(UIView *)accessoryView forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	_accessoryTypes[section][item] = accessoryView;
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
@@ -333,10 +360,17 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 				detail = @"";
 			else if ([detail isKindOfClass:NSAttributedString.class])
 				detail = ((NSAttributedString *)detail).string;
+			id accessory = _accessoryTypes[section][item];
+			
 			CGFloat textWidth = [title sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width + [detail sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width;
 			CGSize cellSize = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]].size;
-			width = MAX(width, textWidth + 1.5f*cellSize.height); // hack to fit in any accessory view
-            if ([self respondsToSelector:@selector(tableView:heightForRowAtIndexPath:)])
+			if ([accessory isKindOfClass:UIView.class])
+				textWidth += [accessory frame].size.width;
+			else
+				textWidth += 1.5f*cellSize.height; // hack to fit in any regular accessory view
+			width = MAX(width, textWidth);
+			
+			if ([self respondsToSelector:@selector(tableView:heightForRowAtIndexPath:)])
                 height += [self tableView:self.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForItem:item inSection:section]];
             else
                 height += cellSize.height;
