@@ -75,11 +75,14 @@
 
 		// when the gesture starts, present the incoming view (above or below existing the existing view) and inform its controller before and after
         case UIGestureRecognizerStateBegan:
-			[incomingVC viewWillAppear:NO];
-			
-			// immediately fill the screen with incoming content, if it's not to be animated into place
-			if (! incomingAnimation)
+		
+			// immediately fill the screen with incoming content, or place it just outside the screen, if it is to be animated into place
+			if (incomingAnimation)
+				incomingView.frame = CGRectOffset(containerView.bounds, (fromTheLeft? -1 : 1) * CGRectGetWidth(containerView.bounds), 0.0f);
+			else
 				incomingView.frame = containerView.bounds;
+
+			[incomingVC viewWillAppear:NO];
 
 			// manipulate the subview order: place incoming on top, but have the outgoing immediately supersede it, if needed
 			// note: -[insertSubView:belowSubview:] does not seem to work correctly here (incoming will always appear on top)
