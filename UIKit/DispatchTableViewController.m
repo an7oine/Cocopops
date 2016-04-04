@@ -33,6 +33,12 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	CGFloat _originalHeaderHeight, _originalFooterHeight;
 }
 
+@synthesize titles=_titles, details=_details;
+@synthesize headers=_headers, footers=_footers;
+@synthesize accessoryTypes=_accessoryTypes;
+@synthesize backgroundColours=_backgroundColours;
+@synthesize blocks=_blocks;
+
 - (instancetype)init
 {
 	if (! (self = [super init]))
@@ -85,22 +91,26 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-	return _headers.count > section && [_titles[section] count] > 0? _headers[section] : nil;
+	return _headers.count > section && [_titles[section] count] > 0 && [_headers[section] length] > 0? _headers[section] : nil;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
-	return _footers.count > section && [_titles[section] count] > 0? _footers[section] : nil;
+	return _footers.count > section && [_titles[section] count] > 0 && [_footers[section] length] > 0? _footers[section] : nil;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:DispatchTableViewCellReuseIdentifier];
+	
 	id title = _titles[indexPath.section][indexPath.row];
-	if ([title isKindOfClass:NSAttributedString.class])
+	if (title == NSNull.null)
+		cell.textLabel.text = nil;
+	else if ([title isKindOfClass:NSAttributedString.class])
 		cell.textLabel.attributedText = title;
 	else
 		cell.textLabel.text = title;
+	
 	id detail = _details[indexPath.section][indexPath.row];
 	if (detail == NSNull.null)
 		cell.detailTextLabel.text = nil;
@@ -178,36 +188,19 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
     _accessoryTypes = [NSMutableArray new];
     _backgroundColours = [NSMutableArray new];
     _blocks = [NSMutableArray new];
+	
+	if (self.isViewLoaded)
+		[self.tableView deleteSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfSections)] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 
-- (void)setHeader:(NSString *)header forSection:(NSInteger)section
+- (void)prepareSection:(NSInteger)section
 {
-	while (_headers.count < section)
-		[_headers addObject:@""];
-	if (_headers.count == section)
-		[_headers addObject:header];
-	else
-		_headers[section] = header;
-}
-- (void)setFooter:(NSString *)footer forSection:(NSInteger)section
-{
-	while (_footers.count < section)
-		[_footers addObject:@""];
-	if (_footers.count == section)
-		[_footers addObject:footer];
-	else
-		_footers[section] = footer;
-}
-
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title detail:(NSString *)detail accessoryView:(UIView *)accessoryView backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
-{
-	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
-	NSAssert(! detail || [detail isKindOfClass:NSString.class] || [detail isKindOfClass:NSAttributedString.class], @"'detail' must be an instance of NSString or NSAttributedString !");
-
 	while (_titles.count <= section)
 	{
 		[_titles addObject:[NSMutableArray new]];
 		[_details addObject:[NSMutableArray new]];
+		[_headers addObject:@""];
+		[_footers addObject:@""];
 		[_accessoryTypes addObject:[NSMutableArray new]];
 		[_backgroundColours addObject:[NSMutableArray new]];
 		[_blocks addObject:[NSMutableArray new]];
@@ -215,10 +208,36 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 		if (self.isViewLoaded)
 			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_titles.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
+}
+
+- (void)setHeader:(NSString *)header forSection:(NSInteger)section
+{
+	[self prepareSection:section];
+	_headers[section] = header;
+	
+	if (self.isViewLoaded)
+		[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:section] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+- (void)setFooter:(NSString *)footer forSection:(NSInteger)section
+{
+	[self prepareSection:section];
+	_footers[section] = footer;
+	
+	if (self.isViewLoaded)
+		[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:section] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title detail:(NSString *)detail accessoryView:(UIView *)accessoryView backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
+{
+	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
+	NSAssert(! detail || [detail isKindOfClass:NSString.class] || [detail isKindOfClass:NSAttributedString.class], @"'detail' must be an instance of NSString or NSAttributedString !");
+
+	[self prepareSection:section];
+
 	NSInteger row = [_titles[section] count];
-	[_titles[section] addObject:title];
+	[_titles[section] addObject:title ?: NSNull.null];
 	[_details[section] addObject:detail ?: NSNull.null];
-	[_accessoryTypes[section] addObject:accessoryView];
+	[_accessoryTypes[section] addObject:accessoryView ?: NSNull.null];
 	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
 	[_blocks[section] addObject:block ?: ^(NSIndexPath *indexPath){}];
 	
@@ -240,17 +259,8 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (NSInteger)moveChoiceFromSection:(NSInteger)section item:(NSInteger)item intoSection:(NSInteger)newSection
 {
-	while (_titles.count <= newSection)
-	{
-		[_titles addObject:[NSMutableArray new]];
-		[_details addObject:[NSMutableArray new]];
-		[_accessoryTypes addObject:[NSMutableArray new]];
-		[_backgroundColours addObject:[NSMutableArray new]];
-		[_blocks addObject:[NSMutableArray new]];
+	[self prepareSection:newSection];
 
-		if (self.isViewLoaded)
-			[self.tableView insertSections:[NSIndexSet indexSetWithIndex:_titles.count-1] withRowAnimation:UITableViewRowAnimationAutomatic];
-	}
 	NSInteger newRow = [_titles[newSection] count] - (newSection==section? 1 : 0);
 	
 	id title = _titles[section][item];
@@ -286,15 +296,16 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	
 	if (self.isViewLoaded)
 	{
-		[self.tableView deleteRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 		if ([_titles[section] count] == 0)
 			[self.tableView reloadSections:[NSIndexSet indexSetWithIndex:section] withRowAnimation:UITableViewRowAnimationAutomatic];
+		else
+			[self.tableView deleteRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 	}
 }
 
 - (void)setTitle:(id)title forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	_titles[section][item] = title;
+	_titles[section][item] = title ?: NSNull.null;
 	
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
@@ -302,7 +313,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (void)setDetail:(id)detail forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	_details[section][item] = detail;
+	_details[section][item] = detail ?: NSNull.null;
 	
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
@@ -317,7 +328,15 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (void)setAccessoryView:(UIView *)accessoryView forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	_accessoryTypes[section][item] = accessoryView;
+	_accessoryTypes[section][item] = accessoryView ?: NSNull.null;
+	if (self.isViewLoaded)
+		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+
+- (void)setBackgroundColour:(UIColor *)backgroundColour forChoiceAtSection:(NSInteger)section item:(NSInteger)item
+{
+	_backgroundColours[section][item] = backgroundColour ?: UIColor.whiteColor;
+	
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
@@ -336,7 +355,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	CGFloat width = 0.0f, height = 0.0f;
 
 	if (self.tableView.style == UITableViewStyleGrouped)
-		height += _originalFooterHeight;
+		height += 11.0f;
 
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
@@ -346,10 +365,11 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
             width = MAX(width, textWidth);
 			height += [self.tableView rectForHeaderInSection:section].size.height;
         }
-		else if (self.tableView.style == UITableViewStyleGrouped)
+		else if (self.tableView.style == UITableViewStyleGrouped && section == 0)
 		{
-			height += [self.tableView rectForHeaderInSection:section].size.height;
+			height += 11.0f;
 		}
+		
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
 		{
 			id title = _titles[section][item];
@@ -375,20 +395,21 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
             else
                 height += cellSize.height;
 		}
+		
 		if (_footers.count > section && [_footers[section] length] > 0 && [_titles[section] count] > 0)
         {
             CGFloat textWidth = [_footers[section] sizeWithAttributes:@{ NSFontAttributeName : cellFont }].width * 1.5f;
             width = MAX(width, textWidth);
             height += [self.tableView rectForFooterInSection:section].size.height;
         }
-		else if (self.tableView.style == UITableViewStyleGrouped)
+		else if (self.tableView.style == UITableViewStyleGrouped && section == self.tableView.numberOfSections-1)
 		{
-            height += [self.tableView rectForFooterInSection:section].size.height;
+            height += 11.0f;
 		}
 	}
 	
 	if (self.tableView.style == UITableViewStyleGrouped)
-		height += _originalHeaderHeight;
+		height += 11.0f;
 
 #if TARGET_OS_TV
 	height += cellFont.pointSize * 2.5f;

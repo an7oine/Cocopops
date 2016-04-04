@@ -41,5 +41,6 @@ extern UITableViewCellAccessoryType const UITableViewCellAccessoryBlank;
 - (void)setDetail:(id)detail forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
 - (void)setAccessoryType:(UITableViewCellAccessoryType)accessoryType forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
 - (void)setAccessoryView:(UIView *)accessoryView forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
+- (void)setBackgroundColour:(UIColor *)backgroundColour forChoiceAtSection:(NSInteger)section item:(NSInteger)item;
 
 @end
