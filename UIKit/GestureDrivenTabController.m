@@ -8,26 +8,53 @@
 @interface GestureDrivenTabController () <UIGestureRecognizerDelegate> @end
 
 @implementation GestureDrivenTabController
+{
+	NSArray *_recognisers;
+	BOOL _panStartedFromTheLeft;
+}
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-        
-    UIScreenEdgePanGestureRecognizer *leftEdgeRecogniser = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(gotLeftEdgePanGesture:)];
-    leftEdgeRecogniser.edges = UIRectEdgeLeft;
-    leftEdgeRecogniser.delegate = self;
-    [self.view addGestureRecognizer:leftEdgeRecogniser];
-    
-    UIScreenEdgePanGestureRecognizer *rightEdgeRecogniser = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(gotRightEdgePanGesture:)];
-    rightEdgeRecogniser.edges = UIRectEdgeRight;
-    rightEdgeRecogniser.delegate = self;
-    [self.view addGestureRecognizer:rightEdgeRecogniser];
+
+	if (self.gestureType == kTabGestureEdge)
+	{
+		UIScreenEdgePanGestureRecognizer *leftEdgeRecogniser = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(switchLeftWithGesture:)];
+		leftEdgeRecogniser.edges = UIRectEdgeLeft;
+		leftEdgeRecogniser.delegate = self;
+		[self.view addGestureRecognizer:leftEdgeRecogniser];
+		
+		UIScreenEdgePanGestureRecognizer *rightEdgeRecogniser = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(switchRightWithGesture:)];
+		rightEdgeRecogniser.edges = UIRectEdgeRight;
+		rightEdgeRecogniser.delegate = self;
+		[self.view addGestureRecognizer:rightEdgeRecogniser];
+		
+		_recognisers = @[ leftEdgeRecogniser, rightEdgeRecogniser ];
+	}
+	else if (self.gestureType == kTabGestureTwoFinger)
+	{
+		UIPanGestureRecognizer *panRecogniser = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(switchEitherWayWithGesture:)];
+		panRecogniser.minimumNumberOfTouches = 2;
+		panRecogniser.delegate = self;
+		[self.view addGestureRecognizer:panRecogniser];
+		
+		_recognisers = @[ panRecogniser ];
+	}
 	
 	if (! self.transitionDuration)
 		self.transitionDuration = 0.2f;
 }
 
-- (void)handleEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender fromTheLeft:(BOOL)fromTheLeft toIndex:(NSInteger)index
+// allow my gestures to combine with any other gestures
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    return [_recognisers containsObject:gestureRecognizer];
+}
+
+
+#pragma mark - Gesture handlers
+
+- (void)handlePanGesture:(UIPanGestureRecognizer *)sender fromTheLeft:(BOOL)fromTheLeft toIndex:(NSInteger)index
 {
     UIView *containerView = self.view;
 
@@ -187,7 +214,7 @@
 }
 
 // handle user gestures only if not disabled
-- (IBAction)gotLeftEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender
+- (IBAction)switchLeftWithGesture:(UIPanGestureRecognizer *)sender
 {
 	NSInteger index = self.selectedIndex-1;
 	if (index < 0)
@@ -198,9 +225,9 @@
 			return;
 	}
     if ([self shouldAcceptUserSelectedViewControllerAtIndex:index])
-        [self handleEdgePanGesture:sender fromTheLeft:YES toIndex:index];
+        [self handlePanGesture:sender fromTheLeft:YES toIndex:index];
 }
-- (IBAction)gotRightEdgePanGesture:(UIScreenEdgePanGestureRecognizer *)sender
+- (IBAction)switchRightWithGesture:(UIPanGestureRecognizer *)sender
 {
 	NSInteger index = self.selectedIndex+1;
 	if (index >= self.viewControllers.count)
@@ -211,13 +238,19 @@
 			return;
 	}
     if ([self shouldAcceptUserSelectedViewControllerAtIndex:index])
-        [self handleEdgePanGesture:sender fromTheLeft:NO toIndex:index];
+        [self handlePanGesture:sender fromTheLeft:NO toIndex:index];
 }
-
-// allow edge pan gestures to combine with any other gestures
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+- (IBAction)switchEitherWayWithGesture:(UIPanGestureRecognizer *)sender
 {
-    return [gestureRecognizer isKindOfClass:UIScreenEdgePanGestureRecognizer.class];
+	// determine the direction only once per gesture
+	if (sender.state == UIGestureRecognizerStateBegan)
+		_panStartedFromTheLeft = [sender velocityInView:sender.view].x >= 0.0f;
+	
+	// thereafter, always invoke the same handler even if direction of the velocity changes
+	if (_panStartedFromTheLeft)
+		[self switchLeftWithGesture:sender];
+	else
+		[self switchRightWithGesture:sender];
 }
 
 
