@@ -52,9 +52,8 @@
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:rootViewController];
 	self.observedViewController = rootViewController;
 	
-	UIGestureRecognizer *interactivePopGestureRecogniser = self.interactivePopGestureRecognizer;
 	_myPopGestureRecogniser = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePopGesture:)];
-	[_myPopGestureRecogniser tieToRecogniser:interactivePopGestureRecogniser];
+	//[_myPopGestureRecogniser tieToRecogniser:self.interactivePopGestureRecogniser];
 	_myPopGestureRecogniser.delegate = self;
 	
 	return self;
@@ -207,7 +206,7 @@
 		return NO;
 	
 	// reject anything but right-pointing gestures
-	else if ([_myPopGestureRecogniser velocityInView:_myPopGestureRecogniser.view].x <= 0.0f)
+	else if ([_myPopGestureRecogniser velocityInView:_myPopGestureRecogniser.view].x < 10.0f)
 		return NO;
 	
 	else
@@ -216,13 +215,21 @@
 
 - (IBAction)handlePopGesture:(UIPanGestureRecognizer *)sender
 {
-	// restore correct observation target + navigation bar state after an ended or cancelled pop gesture
-	if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled)
+	// invoke a non-interactive pop transition
+	if (sender.state == UIGestureRecognizerStateBegan)
+		[self popViewControllerAnimated:YES];
+
+	/*
+	else if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled)
+	{
+		// restore correct observation target + navigation bar state after an ended or cancelled pop gesture
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3f * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
 		{
     		self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:self.topViewController];
 			self.observedViewController = self.topViewController;
 		});
+	}
+	*/
 }
 
 @end
