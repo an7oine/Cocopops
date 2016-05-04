@@ -23,8 +23,12 @@
 - (NSString *)description { return [NSString stringWithFormat:@"[%.1f (%.1f) %.1f]", self.min, self.current, self.max]; }
 @end
 
-
-@interface CollectionZoomPinchGestureRecognizer : UIPinchGestureRecognizer
+@interface CollectionZoomPinchGestureRecognizer :
+#if TARGET_OS_TV
+UIGestureRecognizer
+#else
+UIPinchGestureRecognizer
+#endif
 @property (nonatomic) ZoomFactors *factors;
 @end
 @implementation CollectionZoomPinchGestureRecognizer
@@ -98,6 +102,7 @@
 	ZoomFactors *factors = [[ZoomFactors alloc] initWithMinimum:minimumFactor maximum:maximumFactor];
 	factors.centreAutomatically = centreAutomatically;
 
+#if ! TARGET_OS_TV
 	CollectionZoomPinchGestureRecognizer *pinchRecognizer = [[CollectionZoomPinchGestureRecognizer alloc] initWithTarget:self action:@selector(gotPinchToZoomGesture:)];
 	[self addGestureRecognizer:pinchRecognizer];
 	pinchRecognizer.factors = factors;
@@ -107,7 +112,8 @@
     doubleTapRecognizer.delaysTouchesBegan = YES;
     [self addGestureRecognizer:doubleTapRecognizer];
 	doubleTapRecognizer.factors = factors;
-
+#endif
+	
 #ifdef ENABLE_3D_TOUCH_GESTURE
 	if ([self.traitCollection respondsToSelector:@selector(forceTouchCapability)] && self.traitCollection.forceTouchCapability == UIForceTouchCapabilityAvailable)
 	{
@@ -162,6 +168,7 @@
 
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
 {
+#if ! TARGET_OS_TV
 	// start from the current zoom level
 	if (sender.state == UIGestureRecognizerStateBegan)
 		sender.scale *= sender.factors.current;
@@ -191,6 +198,7 @@
 		else if ([self.delegate conformsToProtocol:@protocol(UICollectionViewZoomDelegate)])
 			[(id <UICollectionViewZoomDelegate>)self.delegate collectionView:self didApplyZoomFactor:sender.factors.current/oldLevel toLevel:sender.factors.current gestureFinished:YES];
 	}
+#endif
 }
 
 - (IBAction)gotDoubleTapGesture:(CollectionZoomTapGestureRecognizer *)sender
