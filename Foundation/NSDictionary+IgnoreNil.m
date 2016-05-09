@@ -11,7 +11,7 @@
 + (instancetype)dictionaryWithObjectsIgnoringNil:(const id  _Nonnull __unsafe_unretained *)objects forKeys:(const id<NSCopying>  _Nonnull __unsafe_unretained *)keys count:(NSUInteger)count
 {
 	id _Nonnull __unsafe_unretained *nonnilObjects = (id _Nonnull __unsafe_unretained *)malloc(((size_t)count) * sizeof(id));
-	id<NSCopying> _Nonnull __unsafe_unretained *nonnilKeys = (id<NSCopying> _Nonnull __unsafe_unretained *)malloc(((size_t)count) * sizeof(id));
+	id<NSCopying> _Nonnull __unsafe_unretained *nonnilKeys = (id<NSCopying> _Nonnull __unsafe_unretained *)malloc(((size_t)count) * sizeof(id<NSCopying>));
 	NSUInteger nonnilCount = 0;
 
 	for (NSUInteger i=0; i < count; i++)
