@@ -126,6 +126,11 @@
 	return [NSIndexPath indexPathForItem:item inSection:section];
 }
 
+- (CGFloat)horizontalWrappingWidth
+{
+	return CGRectGetWidth(self.collectionView.bounds);
+}
+
 - (CGRect)frameForRow:(NSInteger)row column:(NSInteger)column
 {
 	CGFloat width = self.itemSize.width * self.zoomFactor;
@@ -140,10 +145,10 @@
 	CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.transform);
 	CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
 
-	CGFloat viewportWidth = 0.0f;
-	if (self.wrapHorizontally && (viewportWidth = CGRectGetWidth(self.collectionView.bounds)))
+	CGFloat wrappingWidth = 0.0f;
+	if (self.wrapHorizontally && (wrappingWidth = [self horizontalWrappingWidth]) > 0.0f)
 	{
-		CGFloat wrapAtWidth = viewportWidth - width;
+		CGFloat wrapAtWidth = wrappingWidth - width;
 		CGFloat wrappingSeparation = (self.south-self.north+1.5f) * self.itemSpacing.height * self.zoomFactor;
 		while (centre.x - 0.5f*width >= wrapAtWidth)
 		{

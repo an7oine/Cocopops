@@ -25,6 +25,7 @@
 
 // wrap content at viewport width and separate by this height
 @property (nonatomic) BOOL wrapHorizontally;
+- (CGFloat)horizontalWrappingWidth; // width beyond which content is clipped and wrapped around
 
 // methods to request information about the layout
 - (NSInteger)numberOfSections;
