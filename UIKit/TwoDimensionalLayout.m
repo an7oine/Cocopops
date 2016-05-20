@@ -76,6 +76,11 @@
     self.zoomFactor *= zoomFactor;
 }
 
+- (CGFloat)margin
+{
+	return self.marginPerItem * MAX(self.itemSpacing.width, self.itemSpacing.height) * self.zoomFactor;
+}
+
 
 #pragma mark - Helpers
 
@@ -128,7 +133,7 @@
 
 - (CGFloat)horizontalWrappingWidth
 {
-	return CGRectGetWidth(self.collectionView.bounds);
+	return CGRectGetWidth(self.collectionView.bounds) - 2 * self.margin;
 }
 
 - (CGRect)frameForRow:(NSInteger)row column:(NSInteger)column
@@ -145,11 +150,10 @@
 	CGRect transformedFrame = CGRectApplyAffineTransform(frame, self.transform);
 	CGPoint centre = CGPointMake(CGRectGetMidX(transformedFrame), CGRectGetMidY(transformedFrame));
 
-	CGFloat wrappingWidth = 0.0f;
-	if (self.wrapHorizontally && (wrappingWidth = [self horizontalWrappingWidth]) > 0.0f)
+	if (self.wrapHorizontally && self.horizontalWrappingWidth > 0.0f)
 	{
-		CGFloat wrapAtWidth = wrappingWidth - width;
-		CGFloat wrappingSeparation = (self.south-self.north+1.5f) * self.itemSpacing.height * self.zoomFactor;
+		CGFloat wrapAtWidth = self.horizontalWrappingWidth - width;
+		CGFloat wrappingSeparation = (self.south-self.north + 1 + self.wraparoundSpacing) * self.itemSpacing.height * self.zoomFactor;
 		while (centre.x - 0.5f*width >= wrapAtWidth)
 		{
 			centre.x -= wrapAtWidth;
@@ -157,7 +161,7 @@
 		}
 	}
 
-	return [self cellFrameWithFrame:CGRectMake(centre.x-0.5f*width, centre.y-0.5f*height, width, height)];
+	return [self cellFrameWithFrame:CGRectInset((CGRect){ centre, CGSizeZero }, -0.5f*frame.size.width, -0.5f*frame.size.height)];
 }
 
 - (UICollectionViewLayoutAttributes *)createLayoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -195,7 +199,7 @@
         {
             NSIndexPath *indexPath = [NSIndexPath indexPathForItem:item inSection:section];
             layoutAttributes[indexPath] = [self createLayoutAttributesForItemAtIndexPath:indexPath];
-			if (! self.delegate || [self.delegate layout:self shouldIncludeActiveCellInRow:row column:column])
+			if (! [self.delegate respondsToSelector:@selector(layout:shouldIncludeActiveCellInRow:column:)] || [self.delegate layout:self shouldIncludeActiveCellInRow:row column:column])
 				activeFrame = CGRectUnion(activeFrame, [layoutAttributes[indexPath] frame]);
         }
 
@@ -203,8 +207,8 @@
 		activeFrame = CGRectZero;
 
     _layoutAttributes = layoutAttributes;
-	_collectionViewContentSize = activeFrame.size;
-	_contentOrigin = activeFrame.origin;
+	_collectionViewContentSize = CGSizeMake(self.margin + activeFrame.size.width + self.margin, self.margin + activeFrame.size.height + self.margin);
+	_contentOrigin = CGPointMake(activeFrame.origin.x - self.margin, activeFrame.origin.y - self.margin);
 
 	for (UICollectionViewLayoutAttributes *attributes in _layoutAttributes.allValues)
 		attributes.frame = CGRectOffset(attributes.frame, - self.contentOrigin.x, - self.contentOrigin.y);

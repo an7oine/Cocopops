@@ -25,6 +25,7 @@
 
 // wrap content at viewport width and separate by this height
 @property (nonatomic) BOOL wrapHorizontally;
+@property (nonatomic) CGFloat wraparoundSpacing; // extra (proportional) vertical space between rows of wrapped content
 - (CGFloat)horizontalWrappingWidth; // width beyond which content is clipped and wrapped around
 
 // methods to request information about the layout
@@ -42,6 +43,10 @@
 @property (nonatomic) CGSize itemSpacing;
 @property (nonatomic) CGFloat zoomFactor;
 
+// margins around the content
+@property (nonatomic) CGFloat marginPerItem;
+@property (nonatomic, readonly) CGFloat margin;
+
 // delegate
 @property (nonatomic, weak) id <TwoDLayoutDelegate> delegate;
 
@@ -56,5 +61,6 @@
 @end
 
 @protocol TwoDLayoutDelegate <NSObject>
+@optional
 - (BOOL)layout:(TwoDimensionalLayout *)layout shouldIncludeActiveCellInRow:(NSInteger)row column:(NSInteger)column;
 @end
