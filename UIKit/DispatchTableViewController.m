@@ -18,6 +18,63 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 @interface Value1StyleTableViewCell : UITableViewCell @end
 @implementation Value1StyleTableViewCell
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:reuseIdentifier]; }
+- (CGSize)preferredTextLabelSizeWithBoundingWidth:(CGFloat)boundingWidth
+{
+	NSDictionary *titleAttributes = @
+	{
+		NSParagraphStyleAttributeName : ({
+			NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+			[paragraphStyle setLineBreakMode:NSLineBreakByWordWrapping];
+			paragraphStyle;
+		}),
+		NSFontAttributeName : self.textLabel.font,
+	};
+	NSDictionary *detailAttributes = @
+	{
+		NSParagraphStyleAttributeName : ({
+			NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+			[paragraphStyle setLineBreakMode:NSLineBreakByWordWrapping];
+			paragraphStyle;
+		}),
+		NSFontAttributeName : self.detailTextLabel.font,
+	};
+
+	CGFloat width = boundingWidth - 30.0f;
+
+	NSString *titleString = self.textLabel.attributedText.string ?: self.textLabel.text;
+	NSString *detailString = self.detailTextLabel.attributedText.string ?: self.detailTextLabel.text;
+	if (detailString)
+		width -= 10.0f + [detailString boundingRectWithSize:CGSizeMake(width, 2000.0f) options:NSStringDrawingUsesLineFragmentOrigin attributes:detailAttributes context:nil].size.width;
+
+	return [titleString boundingRectWithSize:CGSizeMake(width, 2000.0f) options:NSStringDrawingUsesLineFragmentOrigin attributes:titleAttributes context:nil].size;
+}
+- (void)layoutSubviews
+{
+	[super layoutSubviews];
+
+	self.textLabel.numberOfLines = 0;
+	self.textLabel.lineBreakMode = NSLineBreakByWordWrapping;
+	self.textLabel.textAlignment = NSTextAlignmentJustified;
+
+	CGSize textLabelSize = [self preferredTextLabelSizeWithBoundingWidth:self.bounds.size.width];
+
+	CGRect textLabelFrame = self.textLabel.frame;
+	CGFloat delta = textLabelFrame.size.width - textLabelSize.width;
+	if (delta >= 1.0f)
+	{
+		CGRect detailTextLabelFrame = self.detailTextLabel.frame;
+		textLabelFrame.size = textLabelSize;
+		detailTextLabelFrame.origin.x -= delta;
+		detailTextLabelFrame.size.width += delta;
+		self.textLabel.frame = textLabelFrame;
+		self.detailTextLabel.frame = detailTextLabelFrame;
+
+		self.textLabel.center = CGPointMake(self.textLabel.center.x, 0.5f * self.contentView.bounds.size.height);
+		self.detailTextLabel.center = CGPointMake(self.detailTextLabel.center.x, 0.5f * self.contentView.bounds.size.height);
+
+		[self.textLabel sizeToFit];
+	}
+}
 @end
 
 @interface Value2StyleTableViewCell : UITableViewCell @end
@@ -54,6 +111,17 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	return self;
 }
 
+- (Class)cellClass
+{
+	switch (self.cellStyle)
+	{
+	case UITableViewCellStyleSubtitle: return SubtitleStyleTableViewCell.class;
+	case UITableViewCellStyleValue1: return Value1StyleTableViewCell.class;
+	case UITableViewCellStyleValue2: return Value2StyleTableViewCell.class;
+	default: return UITableViewCell.class;
+	}
+}
+
 
 #pragma mark - View lifetime
 
@@ -61,15 +129,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 {
     [super viewDidLoad];
 
-	Class cellClass = UITableViewCell.class;
-	switch (self.cellStyle)
-	{
-	case UITableViewCellStyleSubtitle: cellClass = SubtitleStyleTableViewCell.class; break;
-	case UITableViewCellStyleValue1: cellClass = Value1StyleTableViewCell.class; break;
-	case UITableViewCellStyleValue2: cellClass = Value2StyleTableViewCell.class; break;
-	default: break;
-	}
-	[self.tableView registerClass:cellClass forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
+	[self.tableView registerClass:self.cellClass forCellReuseIdentifier:DispatchTableViewCellReuseIdentifier];
 
 	_originalHeaderHeight = self.tableView.sectionHeaderHeight;
 	_originalFooterHeight = self.tableView.sectionFooterHeight;
@@ -97,6 +157,20 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
 	return _footers.count > section && [_titles[section] count] > 0 && [_footers[section] length] > 0? _footers[section] : nil;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	CGFloat defaultRowHeight = tableView.rowHeight > 0.0f? tableView.rowHeight : 44.0f;
+
+	if (self.cellStyle == UITableViewCellStyleValue1)
+	{
+		Value1StyleTableViewCell *cell = (Value1StyleTableViewCell *)[self tableView:tableView cellForRowAtIndexPath:indexPath];
+		CGFloat height = [cell preferredTextLabelSizeWithBoundingWidth:CGRectGetWidth(tableView.bounds) > 0.0f? CGRectGetWidth(tableView.bounds) : CGRectGetWidth(UIScreen.mainScreen.bounds)].height;
+		return MAX(height + 22.0f, defaultRowHeight);
+	}
+	else
+		return defaultRowHeight;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -343,6 +417,17 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 
 #pragma mark - Content size calculation
+
+- (void)viewWillLayoutSubviews
+{
+	[super viewWillLayoutSubviews];
+	[self willChangeValueForKey:@"preferredContentSize"];
+}
+- (void)viewDidLayoutSubviews
+{
+	[super viewDidLayoutSubviews];
+	[self didChangeValueForKey:@"preferredContentSize"];
+}
 
 @synthesize preferredContentSize=_preferredContentSize;
 - (CGSize)preferredContentSize
