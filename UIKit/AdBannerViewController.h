@@ -24,6 +24,7 @@ extern NSString * const BannerViewActionDidFinish;
 @property (nonatomic) BOOL hideAdvertising;
 @property (nonatomic) NSString *hideAdvertisingIAPProductIdentifier; // if set, monitor purchases with this identifier and hide adverts in response
 @property (nonatomic, strong) IBOutlet UIViewController *contentController;
+@property (nonatomic, strong) IBOutlet UIView *builtinBanner; // assign a view to display whenever iAd fails to load an advert
 @end
 
 @interface AdBannerContentSegue : UIStoryboardSegue

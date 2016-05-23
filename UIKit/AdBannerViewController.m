@@ -90,7 +90,11 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     [super viewWillAppear:animated];
 
 	if (! self.hideAdvertising)
+	{
+		if (self.builtinBanner)
+			[self.view addSubview:self.builtinBanner];
 		[self.view addSubview:self.adBanner];
+	}
     [self.view setNeedsLayout];
 
     [self startKeyboardAutoAdjusting];
@@ -106,33 +110,41 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     [super viewDidDisappear:animated];
     [_adBanner removeFromSuperview];
+	[_builtinBanner removeFromSuperview];
 }
 
 - (void)viewDidLayoutSubviews
 {
     CGRect contentFrame = self.view.bounds;
-    CGRect bannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
+    CGRect builtinBannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
+	CGRect adBannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
 
-    // Check if the banner has an ad loaded and ready for display
-    if (_adBanner.bannerLoaded)
-    {
-        contentFrame.size.height = CGRectGetHeight(self.view.bounds) - CGRectGetHeight(bannerFrame);
-        // place banner below contentFrame
-        if (CGRectIsNull(_keyboardFrame))
-            bannerFrame.origin.y = CGRectGetMaxY(contentFrame);
-        else
-            bannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - bannerFrame.size.height;
-    }
-    else
-    {
-        contentFrame.size.height = CGRectGetHeight(self.view.bounds);
+	// reserve space for the banner(s), if at least one exists, and advertising is not explicitly hidden
+	if (! self.hideAdvertising && (_adBanner.bannerLoaded || self.builtinBanner))
+		contentFrame.size.height -= CGRectGetHeight(builtinBannerFrame);
 
-        // place banner below bottom of the screen
-        bannerFrame.origin.y = CGRectGetMaxY(contentFrame);
-    }
+	if (CGRectIsNull(_keyboardFrame))
+	{
+		// place both banners right below contentFrame
+		builtinBannerFrame.origin.y = CGRectGetMaxY(contentFrame);
+    	if (_adBanner.bannerLoaded)
+            adBannerFrame.origin.y = CGRectGetMaxY(contentFrame);
+		else
+        	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+	}
+	else
+	{
+		// place both banners right above keyboardFrame
+		builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
+		if (_adBanner.bannerLoaded)
+            adBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - adBannerFrame.size.height;
+		else
+        	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+	}
 
-    // adjust both subviews' frames as necessary
-    _adBanner.frame = bannerFrame;
+    // set frames for each of the subviews
+	self.builtinBanner.frame = builtinBannerFrame;
+    _adBanner.frame = adBannerFrame;
 
     self.contentController.view.frame = contentFrame;
 }
@@ -220,28 +232,32 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
 	if (! _hideAdvertising && hideAdvertising)
 	{
+		_hideAdvertising = YES;
+	
 		ADBannerView *oldAdBanner = _adBanner;
 		_adBanner = nil;
 		
-		if (oldAdBanner.bannerLoaded)
-			[UIView animateWithDuration:0.25f animations:^
-			{
-				[self.view setNeedsLayout];
-				[self.view layoutIfNeeded];
+		[UIView animateWithDuration:0.25f animations:^
+		{
+			[self.view setNeedsLayout];
+			[self.view layoutIfNeeded];
+			
+			self.builtinBanner.frame = (CGRect){ CGPointMake(0.0f, CGRectGetMaxY(self.contentController.view.frame)), self.builtinBanner.frame.size };
+			
+			if (oldAdBanner.bannerLoaded)
 				oldAdBanner.frame = (CGRect){ CGPointMake(0.0f, CGRectGetMaxY(self.contentController.view.frame)), oldAdBanner.frame.size };
-			} completion:^(BOOL finished)
-			{
-				[oldAdBanner removeFromSuperview];
-			}];
-		else
+		} completion:^(BOOL finished)
+		{
 			[oldAdBanner removeFromSuperview];
+		}];
 	}
 	else if (_hideAdvertising && ! hideAdvertising)
 	{
+		_hideAdvertising = NO;
+	
 		[self.view addSubview:self.adBanner];
 		[self.view setNeedsLayout];
 	}
-	_hideAdvertising = hideAdvertising;
 }
 
 - (void)hideAdvertisingWithPurchasedProduct:(NSNotification *)notification
