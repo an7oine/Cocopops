@@ -17,7 +17,15 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 @interface Value1StyleTableViewCell : UITableViewCell @end
 @implementation Value1StyleTableViewCell
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:reuseIdentifier]; }
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+	if (! (self = [super initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:reuseIdentifier]))
+		return nil;
+	self.textLabel.numberOfLines = 0;
+	self.textLabel.lineBreakMode = NSLineBreakByWordWrapping;
+	self.textLabel.textAlignment = NSTextAlignmentJustified;
+	return self;
+}
 - (CGSize)preferredTextLabelSizeWithBoundingWidth:(CGFloat)boundingWidth
 {
 	NSDictionary *titleAttributes = @
@@ -51,10 +59,6 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 - (void)layoutSubviews
 {
 	[super layoutSubviews];
-
-	self.textLabel.numberOfLines = 0;
-	self.textLabel.lineBreakMode = NSLineBreakByWordWrapping;
-	self.textLabel.textAlignment = NSTextAlignmentJustified;
 
 	CGSize textLabelSize = [self preferredTextLabelSizeWithBoundingWidth:self.bounds.size.width];
 
