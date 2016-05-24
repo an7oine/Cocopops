@@ -110,25 +110,30 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     [super viewDidDisappear:animated];
     [_adBanner removeFromSuperview];
-	[_builtinBanner removeFromSuperview];
+	[self.builtinBanner removeFromSuperview];
 }
 
 - (void)viewDidLayoutSubviews
 {
     CGRect contentFrame = self.view.bounds;
-    CGRect builtinBannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
+    CGRect builtinBannerFrame = (CGRect) { CGPointZero, [self.builtinBanner sizeThatFits:contentFrame.size] };
 	CGRect adBannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
 
-	// reserve space for the banner(s), if at least one exists, and advertising is not explicitly hidden
-	if (! self.hideAdvertising && (_adBanner.bannerLoaded || self.builtinBanner))
-		contentFrame.size.height -= CGRectGetHeight(builtinBannerFrame);
-
+	// reserve space for the active banner, if advertising is not explicitly hidden
+	if (! self.hideAdvertising)
+	{
+		if (_adBanner.bannerLoaded)
+			contentFrame.size.height -= CGRectGetHeight(adBannerFrame);
+		else if (self.builtinBanner)
+			contentFrame.size.height -= CGRectGetHeight(builtinBannerFrame);
+	}
+	
 	if (CGRectIsNull(_keyboardFrame))
 	{
-		// place both banners right below contentFrame
-		builtinBannerFrame.origin.y = CGRectGetMaxY(contentFrame);
+		// place both banners at bottom of the screen
+		builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
     	if (_adBanner.bannerLoaded)
-            adBannerFrame.origin.y = CGRectGetMaxY(contentFrame);
+            adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - adBannerFrame.size.height;
 		else
         	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 	}
@@ -142,10 +147,9 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
         	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 	}
 
-    // set frames for each of the subviews
+    // set frame for each subview
 	self.builtinBanner.frame = builtinBannerFrame;
     _adBanner.frame = adBannerFrame;
-
     self.contentController.view.frame = contentFrame;
 }
 
