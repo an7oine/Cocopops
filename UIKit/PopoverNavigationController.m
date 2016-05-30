@@ -112,6 +112,7 @@
 		[self setPreferredContentSize:preferredContentSize];
 		[object setPreferredContentSize:preferredContentSize];
 		[self didChangeValueForKey:@"preferredContentSize"];
+		[self.view setNeedsLayout];
 		
 		_isObserving = NO;
 	}

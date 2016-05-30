@@ -49,6 +49,11 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 	CGFloat width = boundingWidth - 30.0f;
 
+	if (self.accessoryView)
+		width -= 10.0f + self.accessoryView.bounds.size.width;
+	else if (self.accessoryType != UITableViewCellAccessoryNone)
+		width -= 10.0f + 20.0f;
+
 	NSString *titleString = self.textLabel.attributedText.string ?: self.textLabel.text;
 	NSString *detailString = self.detailTextLabel.attributedText.string ?: self.detailTextLabel.text;
 	if (detailString)

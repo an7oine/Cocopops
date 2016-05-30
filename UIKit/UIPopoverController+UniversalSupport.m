@@ -282,10 +282,10 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 	UIPopoverArrowDirection dir = UIPopoverArrowDirectionUnknown;
 	CGRect arrow = CGRectMake(0.0f, 0.0f, 2*ARROW_SIZE, 2*ARROW_SIZE);
 
-	CGFloat leftSpace = CGRectGetMinX(target) - ARROW_SIZE - popover.size.width - CGRectGetMinX(usable);
+	CGFloat leftSpace = (CGRectGetMinX(target) - ARROW_SIZE - minimumSize.width) - CGRectGetMinX(usable);
 	CGFloat rightSpace = CGRectGetMaxX(usable) - (CGRectGetMaxX(target) + ARROW_SIZE + minimumSize.width);
-	CGFloat upSpace = CGRectGetMinY(target) - ARROW_SIZE - popover.size.height - CGRectGetMinY(usable);
-	CGFloat downSpace = CGRectGetMaxY(usable) - (CGRectGetMaxY(target) + ARROW_SIZE + popover.size.height);
+	CGFloat upSpace = (CGRectGetMinY(target) - ARROW_SIZE - minimumSize.height) - CGRectGetMinY(usable);
+	CGFloat downSpace = CGRectGetMaxY(usable) - (CGRectGetMaxY(target) + ARROW_SIZE + minimumSize.height);
 
 	CGFloat bestSpace = -MAX(popover.size.width, popover.size.height);
 	UIPopoverArrowDirection bestDir = UIPopoverArrowDirectionUnknown;
