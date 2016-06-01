@@ -45,10 +45,26 @@
 		self.transitionDuration = 0.2f;
 }
 
-// allow my gestures to combine with any other gestures
-- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+
+#pragma mark - Gesture conflict resolution
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldBeRequiredToFailByGestureRecognizer:(nonnull UIGestureRecognizer *)otherGestureRecognizer
 {
-    return [_recognisers containsObject:gestureRecognizer];
+	if (self.gestureType == kTabGestureEdge)
+    	return YES;
+	else if (self.gestureType == kTabGestureTwoFinger)
+		return (gestureRecognizer.numberOfTouches >= 2);
+	else
+		abort();
+}
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRequireFailureOfGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+	if (self.gestureType == kTabGestureEdge)
+    	return NO;
+	else if (self.gestureType == kTabGestureTwoFinger)
+		return (gestureRecognizer.numberOfTouches < 2);
+	else
+		abort();
 }
 
 
