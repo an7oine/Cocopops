@@ -67,7 +67,10 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	{
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hideAdvertisingWithPurchasedProduct:) name:InAppPurchaseProductPurchased object:nil];
 		if ([InAppPurchaseController.sharedController.purchasedProductIdentifiers containsObject:hideAdvertisingIAPProductIdentifier])
-			[self setHideAdvertising:YES];
+			dispatch_async(dispatch_get_main_queue(), ^
+			{
+				[self setHideAdvertising:YES];
+			});
 	}
 	_hideAdvertisingIAPProductIdentifier = hideAdvertisingIAPProductIdentifier;
 }
@@ -126,26 +129,30 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 			contentFrame.size.height -= CGRectGetHeight(adBannerFrame);
 		else if (self.builtinBanner)
 			contentFrame.size.height -= CGRectGetHeight(builtinBannerFrame);
-	}
-	
-	if (CGRectIsNull(_keyboardFrame))
-	{
-		// place both banners at bottom of the screen
-		builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
-    	if (_adBanner.bannerLoaded)
-            adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - adBannerFrame.size.height;
+
+		if (CGRectIsNull(_keyboardFrame))
+		{
+			// place both banners at bottom of the screen
+			builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
+
+			if (_adBanner.bannerLoaded)
+				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - adBannerFrame.size.height;
+			else
+				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+		}
 		else
-        	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+		{
+			// place both banners right above keyboardFrame
+			builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
+
+			if (_adBanner.bannerLoaded)
+				adBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - adBannerFrame.size.height;
+			else
+				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+		}
 	}
 	else
-	{
-		// place both banners right above keyboardFrame
-		builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
-		if (_adBanner.bannerLoaded)
-            adBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - adBannerFrame.size.height;
-		else
-        	adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
-	}
+		builtinBannerFrame.origin.y = adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 
     // set frame for each subview
 	self.builtinBanner.frame = builtinBannerFrame;
