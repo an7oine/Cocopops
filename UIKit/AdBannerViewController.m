@@ -5,18 +5,36 @@
 #import "AdBannerViewController.h"
 #import "InAppPurchaseController.h"
 
+#if USE_IAD
 #import <iAd/iAd.h>
+#else
+#import "MPAdView.h"
+#endif
 
 NSString * const BannerViewActionWillBegin = @"BannerViewActionWillBegin";
 NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
-@interface AdBannerViewController () <ADBannerViewDelegate>
+@interface AdBannerViewController ()
+@property (nonatomic, readonly) UIView *adView;
+@property (nonatomic, readonly) BOOL adViewHasContent;
 @end
+
+#if USE_IAD
+@interface AdBannerViewController () <ADBannerViewDelegate> @end
+#else
+@interface AdBannerViewController () <MPAdViewDelegate> @end
+#endif
 
 @implementation AdBannerViewController
 {
-    ADBannerView *_adBanner;
-    CGRect _keyboardFrame;
+#if USE_IAD
+    ADBannerView *_adView;
+#else
+	MPAdView *_adContentView;
+	UIView *_adContainerView;
+#endif
+	
+	CGRect _keyboardFrame;
 }
 
 @synthesize hideAdvertising=_hideAdvertising, hideAdvertisingIAPProductIdentifier=_hideAdvertisingIAPProductIdentifier;
@@ -28,25 +46,6 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
         [self performSegueWithIdentifier:SETCONTENT_SEGUE sender:self];
 	NSAssert(_contentController, @"AdBannerVC: content VC not set, and performing segue \"" SETCONTENT_SEGUE "\" failed!");
 	return _contentController;
-}
-
-+ (ADBannerView *)adBanner
-{
-#if STATIC_BANNER
-	static ADBannerView *_adBanner = nil;
-    return _adBanner ?: (_adBanner = [[ADBannerView alloc] initWithAdType:ADAdTypeBanner]);
-#else
-	return [[ADBannerView alloc] initWithAdType:ADAdTypeBanner];
-#endif
-}
-
-- (ADBannerView *)adBanner
-{
-    if (_adBanner)
-        return _adBanner;
-    _adBanner = self.class.adBanner;
-    _adBanner.delegate = self;
-    return _adBanner;
 }
 
 - (void)loadView
@@ -96,7 +95,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	{
 		if (self.builtinBanner)
 			[self.view addSubview:self.builtinBanner];
-		[self.view addSubview:self.adBanner];
+		[self.view addSubview:self.adView];
 	}
     [self.view setNeedsLayout];
 
@@ -112,7 +111,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-    [_adBanner removeFromSuperview];
+    [self.adViewIfLoaded removeFromSuperview];
 	[self.builtinBanner removeFromSuperview];
 }
 
@@ -120,12 +119,14 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     CGRect contentFrame = self.view.bounds;
     CGRect builtinBannerFrame = (CGRect) { CGPointZero, [self.builtinBanner sizeThatFits:contentFrame.size] };
-	CGRect adBannerFrame = (CGRect) { CGPointZero, [_adBanner sizeThatFits:contentFrame.size] };
+	CGRect adBannerFrame = (CGRect) { CGPointZero, [self adViewSizeWithProposedSize:contentFrame.size] };
+
+	//builtinBannerFrame.size.width = adBannerFrame.size.width = contentFrame.size.width;
 
 	// reserve space for the active banner, if advertising is not explicitly hidden
 	if (! self.hideAdvertising)
 	{
-		if (_adBanner.bannerLoaded)
+		if (self.adViewHasContent)
 			contentFrame.size.height -= CGRectGetHeight(adBannerFrame);
 		else if (self.builtinBanner)
 			contentFrame.size.height -= CGRectGetHeight(builtinBannerFrame);
@@ -135,7 +136,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 			// place both banners at bottom of the screen
 			builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
 
-			if (_adBanner.bannerLoaded)
+			if (self.adViewHasContent)
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - adBannerFrame.size.height;
 			else
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
@@ -145,7 +146,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 			// place both banners right above keyboardFrame
 			builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
 
-			if (_adBanner.bannerLoaded)
+			if (self.adViewHasContent)
 				adBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - adBannerFrame.size.height;
 			else
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
@@ -156,43 +157,8 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
     // set frame for each subview
 	self.builtinBanner.frame = builtinBannerFrame;
-    _adBanner.frame = adBannerFrame;
+    self.adViewIfLoaded.frame = adBannerFrame;
     self.contentController.view.frame = contentFrame;
-}
-
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
-{
-    [self.view setNeedsLayout];
-    [self.view layoutIfNeeded];
-}
-
-- (void)bannerViewDidLoadAd:(ADBannerView *)banner
-{
-    [UIView animateWithDuration:0.25f animations:^
-    {
-        [self.view setNeedsLayout];
-        [self.view layoutIfNeeded];
-    }];
-}
-
-- (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
-{
-    [UIView animateWithDuration:0.25f animations:^
-    {
-        [self.view setNeedsLayout];
-        [self.view layoutIfNeeded];
-    }];
-}
-
-- (BOOL)bannerViewActionShouldBegin:(ADBannerView *)banner willLeaveApplication:(BOOL)willLeave
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionWillBegin object:self];
-    return YES;
-}
-
-- (void)bannerViewActionDidFinish:(ADBannerView *)banner
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionDidFinish object:self];
 }
 
 - (void)startKeyboardAutoAdjusting
@@ -206,7 +172,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 }
 
-- (void)keyboardWillShow:(NSNotification*)aNotification
+- (void)keyboardWillShow:(NSNotification *)aNotification
 {
 	CGRect kbdFrame = [aNotification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
 	_keyboardFrame = [self.view convertRect:kbdFrame fromView:self.view.window];
@@ -218,12 +184,10 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
     {
 		 [self.view setNeedsLayout];
 		 [self.view layoutIfNeeded];
-    } completion:^(BOOL finished)
-	{
-	}];
+    } completion:nil];
 }
 
-- (void)keyboardWillHide:(NSNotification*)aNotification
+- (void)keyboardWillHide:(NSNotification *)aNotification
 {
 	_keyboardFrame = CGRectNull;
 
@@ -234,9 +198,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	{
 		[self.view setNeedsLayout];
 		[self.view layoutIfNeeded];
-	} completion:^(BOOL finished)
-	{
-	}];
+	} completion:nil];
 }
 
 - (void)setHideAdvertising:(BOOL)hideAdvertising
@@ -245,8 +207,9 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	{
 		_hideAdvertising = YES;
 	
-		ADBannerView *oldAdBanner = _adBanner;
-		_adBanner = nil;
+		BOOL adViewHadContent = self.adViewHasContent;
+		UIView *oldAdBanner = self.adViewIfLoaded;
+		[self destroyAdView];
 		
 		[UIView animateWithDuration:0.25f animations:^
 		{
@@ -255,7 +218,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 			
 			self.builtinBanner.frame = (CGRect){ CGPointMake(0.0f, CGRectGetMaxY(self.contentController.view.frame)), self.builtinBanner.frame.size };
 			
-			if (oldAdBanner.bannerLoaded)
+			if (adViewHadContent)
 				oldAdBanner.frame = (CGRect){ CGPointMake(0.0f, CGRectGetMaxY(self.contentController.view.frame)), oldAdBanner.frame.size };
 		} completion:^(BOOL finished)
 		{
@@ -266,7 +229,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	{
 		_hideAdvertising = NO;
 	
-		[self.view addSubview:self.adBanner];
+		[self.view addSubview:self.adView];
 		[self.view setNeedsLayout];
 	}
 }
@@ -276,6 +239,133 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	if ([[notification.userInfo valueForKey:@"productIdentifier"] isEqualToString:self.hideAdvertisingIAPProductIdentifier])
 		[self setHideAdvertising:YES];
 }
+
+
+#pragma mark - MoPub
+
+#if ! USE_IAD
+- (UIView *)adView
+{
+    if (_adContainerView)
+        return _adContainerView;
+	
+    _adContentView = [[MPAdView alloc] initWithAdUnitId:self.mpUnitID size:MOPUB_BANNER_SIZE];
+    _adContentView.delegate = self;
+#ifdef DEBUG
+	//__adContentView.testing = YES;
+#endif
+	[_adContentView loadAd];
+	
+	UIView *containerView = [[UIView alloc] initWithFrame:CGRectZero];
+	containerView.backgroundColor = UIColor.whiteColor;
+	containerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	
+	_adContentView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+	[containerView addSubview:_adContentView];
+	
+	return _adContainerView = containerView;
+}
+- (UIView *)adViewIfLoaded { return _adContainerView; }
+- (void)destroyAdView
+{
+	[_adContentView removeFromSuperview];
+	[_adContainerView removeFromSuperview];
+	_adContentView.delegate = nil, _adContentView = nil, _adContainerView = nil;
+	_adViewHasContent = NO;
+}
+@synthesize adViewHasContent=_adViewHasContent;
+- (CGSize)adViewSizeWithProposedSize:(CGSize)size { return CGSizeMake(size.width, [_adContentView adContentViewSize].height); }
+
+- (void)adViewDidLoadAd:(MPAdView *)view
+{
+	_adViewHasContent = YES;
+	[UIView animateWithDuration:0.25f animations:^
+    {
+        [self.view setNeedsLayout];
+        [self.view layoutIfNeeded];
+    }];
+}
+- (void)adViewDidFailToLoadAd:(MPAdView *)view
+{
+	_adViewHasContent = NO;
+	[UIView animateWithDuration:0.25f animations:^
+    {
+        [self.view setNeedsLayout];
+        [self.view layoutIfNeeded];
+    }];
+}
+- (void)willPresentModalViewForAd:(MPAdView *)view
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionWillBegin object:self];
+}
+- (void)didDismissModalViewForAd:(MPAdView *)view
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionDidFinish object:self];
+}
+- (UIViewController *)viewControllerForPresentingModalView { return self; }
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+	[_adContentView rotateToOrientation:toInterfaceOrientation];
+}
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+	[UIView animateWithDuration:0.25f animations:^
+    {
+		[self.view setNeedsLayout];
+		[self.view layoutIfNeeded];
+	}];
+}
+#endif
+
+
+#pragma mark - iAd
+
+#if USE_IAD
+- (ADBannerView *)adView
+{
+    if (_adView)
+        return _adView;
+    _adView = [[ADBannerView alloc] initWithAdType:ADAdTypeBanner];
+    _adView.delegate = self;
+    return _adView;
+}
+- (ADBannerView *)adViewIfLoaded { return _adView; }
+- (void)destroyAdView { _adView = nil; }
+- (BOOL)adViewHasContent { return self.adViewIfLoaded.bannerLoaded; }
+- (CGSize)adViewSizeWithProposedSize:(CGSize)size { return [self.adViewIfLoaded sizeThatFits:size]; }
+
+- (void)bannerViewDidLoadAd:(ADBannerView *)banner
+{
+    [UIView animateWithDuration:0.25f animations:^
+    {
+        [self.view setNeedsLayout];
+        [self.view layoutIfNeeded];
+    }];
+}
+- (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
+{
+    [UIView animateWithDuration:0.25f animations:^
+    {
+        [self.view setNeedsLayout];
+        [self.view layoutIfNeeded];
+    }];
+}
+- (BOOL)bannerViewActionShouldBegin:(ADBannerView *)banner willLeaveApplication:(BOOL)willLeave
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionWillBegin object:self];
+    return YES;
+}
+- (void)bannerViewActionDidFinish:(ADBannerView *)banner
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionDidFinish object:self];
+}
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [self.view setNeedsLayout];
+    [self.view layoutIfNeeded];
+}
+#endif
 
 @end
 
