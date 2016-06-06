@@ -133,26 +133,35 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 		if (CGRectIsNull(_keyboardFrame))
 		{
-			// place both banners at bottom of the screen
-			builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
-
+			// place either banner at bottom of the screen, hide the other
 			if (self.adViewHasContent)
+			{
+				builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - adBannerFrame.size.height;
+			}
 			else
+			{
+				builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds) - builtinBannerFrame.size.height;
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+			}
 		}
 		else
 		{
-			// place both banners right above keyboardFrame
-			builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
-
+			// place either banner right above keyboardFrame, hide the other
 			if (self.adViewHasContent)
+			{
+				builtinBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 				adBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - adBannerFrame.size.height;
+			}
 			else
+			{
+				builtinBannerFrame.origin.y = CGRectGetMinY(_keyboardFrame) - builtinBannerFrame.size.height;
 				adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
+			}
 		}
 	}
 	else
+		// hide both banners
 		builtinBannerFrame.origin.y = adBannerFrame.origin.y = CGRectGetMaxY(self.view.bounds);
 
     // set frame for each subview
