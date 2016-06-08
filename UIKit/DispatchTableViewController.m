@@ -170,7 +170,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	CGFloat defaultRowHeight = tableView.rowHeight > 0.0f? tableView.rowHeight : 44.0f;
+	CGFloat defaultRowHeight = tableView.rowHeight > 0.0f? tableView.rowHeight : UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomTV? 67.0f : 44.0f;
 
 	if (self.cellStyle == UITableViewCellStyleValue1)
 	{
@@ -179,7 +179,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 		return MAX(height + 22.0f, defaultRowHeight);
 	}
 	else
-		return defaultRowHeight;
+		return UITableViewAutomaticDimension;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -448,8 +448,10 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 	CGFloat width = 0.0f, height = 0.0f;
 
+	CGFloat defaultRowHeight = UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomTV? 67.0f : 44.0f;
+
 	if (self.tableView.style == UITableViewStyleGrouped)
-		height += 11.0f;
+		height += 0.25f * defaultRowHeight;
 
 	for (NSInteger section=0; section < self.tableView.numberOfSections; section++)
 	{
@@ -461,7 +463,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
         }
 		else if (self.tableView.style == UITableViewStyleGrouped && section == 0)
 		{
-			height += 11.0f;
+			height += 0.25f * defaultRowHeight;
 		}
 		
 		for (NSInteger item=0; item < [self.tableView numberOfRowsInSection:section]; item++)
@@ -498,15 +500,15 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
         }
 		else if (self.tableView.style == UITableViewStyleGrouped && section == self.tableView.numberOfSections-1)
 		{
-            height += 11.0f;
+            height += 0.25f * defaultRowHeight;
 		}
 	}
 	
 	if (self.tableView.style == UITableViewStyleGrouped)
-		height += 11.0f;
+		height += 0.25f * defaultRowHeight;
 
 #if TARGET_OS_TV
-	height += cellFont.pointSize * 2.5f;
+	height += cellFont.pointSize * 4.0f;
 #endif
 
 	return CGSizeMake(width, height);
