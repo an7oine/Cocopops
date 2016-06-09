@@ -179,7 +179,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 		return MAX(height + 22.0f, defaultRowHeight);
 	}
 	else
-		return UITableViewAutomaticDimension;
+		return defaultRowHeight;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
