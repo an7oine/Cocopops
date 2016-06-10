@@ -10,9 +10,17 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 #pragma mark - Styled cell classes
 
+@implementation UITableViewCell (AutomaticHeight)
++ (CGFloat)automaticDimensionHeight
+{
+	return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomTV? 67.0f : 44.0f;
+}
+@end
+
 @interface SubtitleStyleTableViewCell : UITableViewCell @end
 @implementation SubtitleStyleTableViewCell
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier { return [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:reuseIdentifier]; }
++ (CGFloat)automaticDimensionHeight { return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomTV? 100.0f : 44.0f; }
 @end
 
 @interface Value1StyleTableViewCell : UITableViewCell @end
@@ -170,7 +178,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	CGFloat defaultRowHeight = tableView.rowHeight > 0.0f? tableView.rowHeight : UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomTV? 67.0f : 44.0f;
+	CGFloat defaultRowHeight = tableView.rowHeight > 0.0f? tableView.rowHeight : [self.cellClass automaticDimensionHeight];
 
 	if (self.cellStyle == UITableViewCellStyleValue1)
 	{
