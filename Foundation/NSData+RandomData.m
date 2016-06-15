@@ -9,7 +9,7 @@
 + (instancetype)randomDataWithSize:(size_t)size
 {
 	NSMutableData *result = [[NSMutableData alloc] initWithLength:size];
-	SecRandomCopyBytes(kSecRandomDefault, size, result.mutableBytes);
+	NSAssert(SecRandomCopyBytes(kSecRandomDefault, size, result.mutableBytes) == 0, @"Failure in SecRandomCopyBytes: %d", errno);
 	return result;
 }
 
