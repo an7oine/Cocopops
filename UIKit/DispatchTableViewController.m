@@ -184,7 +184,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	{
 		Value1StyleTableViewCell *cell = (Value1StyleTableViewCell *)[self tableView:tableView cellForRowAtIndexPath:indexPath];
 		CGFloat height = [cell preferredTextLabelSizeWithBoundingWidth:CGRectGetWidth(tableView.bounds) > 0.0f? CGRectGetWidth(tableView.bounds) : CGRectGetWidth(UIScreen.mainScreen.bounds)].height;
-		return MAX(height + 22.0f, defaultRowHeight);
+		return MAX(height + 0.5f*defaultRowHeight, defaultRowHeight);
 	}
 	else
 		return defaultRowHeight;
