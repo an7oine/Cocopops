@@ -6,7 +6,7 @@
 
 @implementation UIImageView (PDFSupport)
 
-- (instancetype)initWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
+- (UIImage *)imageWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
 {
 	CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData((CFDataRef)pdfData);
 	CGPDFDocumentRef pdfDocument = CGPDFDocumentCreateWithProvider(dataProvider);
@@ -32,7 +32,17 @@
 	CGPDFDocumentRelease(pdfDocument);
 	CGDataProviderRelease(dataProvider);
 	
-	return [self initWithImage:image];
+	return image;
+}
+
+- (instancetype)initWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
+{
+	return [self initWithImage:[self imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi]];
+}
+
+- (void)setPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
+{
+	self.image = [self imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi];
 }
 
 @end

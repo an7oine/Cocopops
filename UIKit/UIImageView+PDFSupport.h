@@ -7,5 +7,6 @@
 @interface UIImageView (PDFSupport)
 
 - (instancetype)initWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi;
+- (void)setPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi;
 
 @end
