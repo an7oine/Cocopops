@@ -4,31 +4,33 @@
 
 #import <UIKit/UIKit.h>
 
-/**
-Define as 1 for the iAd network, 0 for MoPub
-
-Note that to use iAd, you will need to link against iAd.framework
-
-For MoPub, see their instructions at:
-https://github.com/mopub/mopub-ios-sdk/wiki/Banner-Integration-For-iOS
- */
-#define USE_IAD 0
-
 #define SETCONTENT_SEGUE @"SetContent" // instantiate an AdBannerContentSegue in your Storyboard using this identifier
 
+/**
+ A notification identifier, triggered whenever the user taps on a visible advert
+ */
 extern NSString * const BannerViewActionWillBegin;
+
+/**
+ A notification identifier, triggered whenever a user-requested fullscreen advert is hidden
+ */
 extern NSString * const BannerViewActionDidFinish;
 
 /**
-Display an advert banner below user-supplied contentViewController's content whenever an advert is available, and keep the banner hidden otherwise.
+IMPORTANT: you will now need to link against MoPubSDK to use this class. See their instructions at:
+ https://github.com/mopub/mopub-ios-sdk/wiki/Getting-Started
+ 
+Display an advert banner below user-supplied contentViewController's content whenever an advert is available. Keep the banner hidden otherwise, and display a user-supplied fallback banner if available.
 
-Note that any active @c inputView is always displayed right on the screen edge, and whenever one is in place, the ad banner stays between the @c inputView and @c contentViewController.view
+Note that any active @c inputView is always displayed right against the screen edge, and whenever one is in place, the ad banner stays between the @c inputView and @c contentViewController.view
 
-Usage:
+Usage (via Interface Builder):
 
-1. instantiate an @c AdBannerViewController and a desired content @c viewController in IB,
+1. instantiate an @c AdBannerViewController and a desired content @c viewController,
 
-2. instantiate an @c AdBannerContentSegue in IB with @c src=adBannerVC, @c dest=contentVC, @c identifier="SetContent"
+2. set the @c mpUnitID runtime attribute to the Ad Unit ID created using MoPub dashboard,
+
+3. instantiate an @c AdBannerContentSegue from the @c AdBannerViewController to the content @c VC with @c identifier="SetContent"
 */
 @interface AdBannerViewController : UIViewController
 
@@ -38,9 +40,12 @@ Usage:
 @property (nonatomic, strong) UIViewController *contentController;
 @property (nonatomic, strong) IBOutlet UIView *builtinBanner; // assign a fallback view to display whenever an advert fails to load
 
-@property (nonatomic) NSString *mpUnitID; // Ad unit ID assigned by the MoPub network (not used by iAd)
+@property (nonatomic) NSString *mpUnitID; // Ad unit ID, assigned by the MoPub network (enter e.g. via IB as a user defined runtime attribute)
 
 @end
 
+/**
+A custom placeholder segue linking an AdBannerViewController to its user-supplied content. Will be automatically triggered once the associated AdBannerViewController instance becomes visible.
+ */
 @interface AdBannerContentSegue : UIStoryboardSegue
 @end

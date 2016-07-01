@@ -5,11 +5,7 @@
 #import "AdBannerViewController.h"
 #import "InAppPurchaseController.h"
 
-#if USE_IAD
-#import <iAd/iAd.h>
-#else
 #import "MPAdView.h"
-#endif
 
 NSString * const BannerViewActionWillBegin = @"BannerViewActionWillBegin";
 NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
@@ -19,20 +15,12 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 @property (nonatomic, readonly) BOOL adViewHasContent;
 @end
 
-#if USE_IAD
-@interface AdBannerViewController () <ADBannerViewDelegate> @end
-#else
 @interface AdBannerViewController () <MPAdViewDelegate> @end
-#endif
 
 @implementation AdBannerViewController
 {
-#if USE_IAD
-    ADBannerView *_adView;
-#else
 	MPAdView *_adContentView;
 	UIView *_adContainerView;
-#endif
 	
 	CGRect _keyboardFrame;
 }
@@ -78,11 +66,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
     return [self.contentController preferredInterfaceOrientationForPresentation];
 }
-#ifdef __IPHONE_9_0
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
-#else
-- (NSUInteger)supportedInterfaceOrientations
-#endif
 {
     return [self.contentController supportedInterfaceOrientations];
 }
@@ -252,7 +236,6 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 #pragma mark - MoPub
 
-#if ! USE_IAD
 - (UIView *)adView
 {
     if (_adContainerView)
@@ -260,9 +243,6 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	
     _adContentView = [[MPAdView alloc] initWithAdUnitId:self.mpUnitID size:MOPUB_BANNER_SIZE];
     _adContentView.delegate = self;
-#ifdef DEBUG
-	//__adContentView.testing = YES;
-#endif
 	[_adContentView loadAd];
 	
 	UIView *containerView = [[UIView alloc] initWithFrame:CGRectZero];
@@ -325,56 +305,6 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 		[self.view layoutIfNeeded];
 	}];
 }
-#endif
-
-
-#pragma mark - iAd
-
-#if USE_IAD
-- (ADBannerView *)adView
-{
-    if (_adView)
-        return _adView;
-    _adView = [[ADBannerView alloc] initWithAdType:ADAdTypeBanner];
-    _adView.delegate = self;
-    return _adView;
-}
-- (ADBannerView *)adViewIfLoaded { return _adView; }
-- (void)destroyAdView { _adView = nil; }
-- (BOOL)adViewHasContent { return self.adViewIfLoaded.bannerLoaded; }
-- (CGSize)adViewSizeWithProposedSize:(CGSize)size { return [self.adViewIfLoaded sizeThatFits:size]; }
-
-- (void)bannerViewDidLoadAd:(ADBannerView *)banner
-{
-    [UIView animateWithDuration:0.25f animations:^
-    {
-        [self.view setNeedsLayout];
-        [self.view layoutIfNeeded];
-    }];
-}
-- (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error
-{
-    [UIView animateWithDuration:0.25f animations:^
-    {
-        [self.view setNeedsLayout];
-        [self.view layoutIfNeeded];
-    }];
-}
-- (BOOL)bannerViewActionShouldBegin:(ADBannerView *)banner willLeaveApplication:(BOOL)willLeave
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionWillBegin object:self];
-    return YES;
-}
-- (void)bannerViewActionDidFinish:(ADBannerView *)banner
-{
-    [[NSNotificationCenter defaultCenter] postNotificationName:BannerViewActionDidFinish object:self];
-}
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
-{
-    [self.view setNeedsLayout];
-    [self.view layoutIfNeeded];
-}
-#endif
 
 @end
 
