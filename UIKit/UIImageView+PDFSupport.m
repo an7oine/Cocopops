@@ -4,9 +4,9 @@
 
 #import "UIImageView+PDFSupport.h"
 
-@implementation UIImageView (PDFSupport)
+@implementation UIImage (PDFSupport)
 
-- (UIImage *)imageWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
++ (instancetype)imageWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
 {
 	CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData((CFDataRef)pdfData);
 	CGPDFDocumentRef pdfDocument = CGPDFDocumentCreateWithProvider(dataProvider);
@@ -35,14 +35,18 @@
 	return image;
 }
 
+@end
+
+@implementation UIImageView (PDFSupport)
+
 - (instancetype)initWithPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
 {
-	return [self initWithImage:[self imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi]];
+	return [self initWithImage:[UIImage imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi]];
 }
 
 - (void)setPDFData:(NSData *)pdfData pageNumber:(NSInteger)pageNumber ppi:(CGFloat)ppi
 {
-	self.image = [self imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi];
+	self.image = [UIImage imageWithPDFData:pdfData pageNumber:pageNumber ppi:ppi];
 }
 
 @end
