@@ -236,12 +236,21 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 
 #pragma mark - MoPub
 
+- (CGSize)mpBannerSize
+{
+	// pick a size based on device type
+	if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad)
+		return MOPUB_LEADERBOARD_SIZE;
+	else
+		return MOPUB_BANNER_SIZE;
+}
+
 - (UIView *)adView
 {
     if (_adContainerView)
         return _adContainerView;
 	
-    _adContentView = [[MPAdView alloc] initWithAdUnitId:self.mpUnitID size:MOPUB_BANNER_SIZE];
+    _adContentView = [[MPAdView alloc] initWithAdUnitId:self.mpUnitID size:self.mpBannerSize];
     _adContentView.delegate = self;
 	[_adContentView loadAd];
 	
@@ -263,7 +272,7 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 	_adViewHasContent = NO;
 }
 @synthesize adViewHasContent=_adViewHasContent;
-- (CGSize)adViewSizeWithProposedSize:(CGSize)size { return CGSizeMake(size.width, [_adContentView adContentViewSize].height); }
+- (CGSize)adViewSizeWithProposedSize:(CGSize)size { return CGSizeMake(size.width, self.mpBannerSize.height); }
 
 - (void)adViewDidLoadAd:(MPAdView *)view
 {
