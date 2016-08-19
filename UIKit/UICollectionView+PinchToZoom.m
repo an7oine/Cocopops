@@ -94,6 +94,7 @@ UIPinchGestureRecognizer
 }
 @end
 
+@interface UICollectionView () <UIGestureRecognizerDelegate> @end
 
 @implementation UICollectionView (PinchToZoom)
 
@@ -106,6 +107,7 @@ UIPinchGestureRecognizer
 	CollectionZoomPinchGestureRecognizer *pinchRecognizer = [[CollectionZoomPinchGestureRecognizer alloc] initWithTarget:self action:@selector(gotPinchToZoomGesture:)];
 	[self addGestureRecognizer:pinchRecognizer];
 	pinchRecognizer.factors = factors;
+	pinchRecognizer.delegate = self;
 
     CollectionZoomTapGestureRecognizer *doubleTapRecognizer = [[CollectionZoomTapGestureRecognizer alloc] initWithTarget:self action:@selector(gotDoubleTapGesture:)];
     doubleTapRecognizer.numberOfTapsRequired = 2;
@@ -145,6 +147,17 @@ UIPinchGestureRecognizer
 	}
 }
 
+
+#pragma mark - UIGestureRecognizer delegate
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+	return otherGestureRecognizer == self.panGestureRecognizer;
+}
+
+
+#pragma mark - Zoom factor property
+
 - (CGFloat)zoomFactor
 {
 	ZoomFactors *factors = nil;
@@ -165,6 +178,9 @@ UIPinchGestureRecognizer
 	if (factors)
 		[self setZoomLevel:zoomFactor aroundPoint:CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds)) withFactors:factors animated:animated finished:YES];
 }
+
+
+#pragma mark - Action targets
 
 - (IBAction)gotPinchToZoomGesture:(CollectionZoomPinchGestureRecognizer *)sender
 {
@@ -241,6 +257,9 @@ UIPinchGestureRecognizer
 	}
 }
 #endif
+
+
+#pragma mark - Helpers
 
 - (void)adjustContentInsetToCentreContent
 {
