@@ -7,6 +7,6 @@
 @interface NSDictionary (ValueArray)
 
 // derive a new array containing values for the given keys
-- (NSArray *)valuesForKeys:(NSArray *)keys;
+- (NSArray *)valuesWithKeys:(NSArray *)keys;
 
 @end

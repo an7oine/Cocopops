@@ -6,7 +6,7 @@
 
 @implementation NSDictionary (ValueArray)
 
-- (NSArray *)valuesForKeys:(NSArray *)keys
+- (NSArray *)valuesWithKeys:(NSArray *)keys
 {
 	NSMutableArray *result = [[NSMutableArray alloc] initWithCapacity:keys.count];
 	for (id key in keys)
