@@ -16,17 +16,32 @@ dev_language="$2"
 # treat rest of command line as references to source material
 shift 2
 
-# re-generate any existing .strings (in the development language) for storyboard files
+# re-generate any existing .strings (in the development language) for storyboard files,
+# convert into UTF-8 and prepend BOM marks (Xcode seems to like them)
 for storyboard
  do
 	[[ "$storyboard" =~ .storyboard ]] || break
 	shift
 	strings="${localisation_dir}/${dev_language}.lproj/$( basename "${storyboard}" .storyboard ).strings"
-	[ -s "$strings" ] && ibtool --generate-strings-file "$strings" "$storyboard"
+	if [ -s "$strings" ]
+	 then ibtool --generate-strings-file "${strings}" "$storyboard"
+		iconv -f UTF-16 -t UTF-8 "${strings}" |\
+	 	sed 1s/^/$'\xef\xbb\xbf'/ >"${strings}-tmp"
+		mv "${strings}-tmp" "${strings}"
+	fi
 done
 
 # then re-generate strings (in the development language) for all remaining files
 genstrings -o "${localisation_dir}/${dev_language}.lproj" "$@"
+
+# convert these .strings into UTF-8 w/ BOM, too
+for strings in "${localisation_dir}/${dev_language}.lproj"/*.strings
+ do if LANG=C grep ^$'\xff\xfe' "${strings}" >/dev/null
+	 then iconv -f UTF-16 -t UTF-8 "${strings}" |\
+	 	sed 1s/^/$'\xef\xbb\xbf'/ >"${strings}-tmp"
+		mv "${strings}-tmp" "${strings}"
+	fi
+done
 
 # a regular expression to match localisation keys
 localisation_regex="^\"(.*)\" = \"(.*)\";$"
@@ -48,8 +63,8 @@ for lproj in "${localisation_dir}"/*.lproj
 		# target the corresponding file in current lproj
 		target="${lproj}/$( basename ${strings} )"
 
-		# read each line in the source file, converted to UTF-8
-		iconv -f UTF-16 -t UTF-8 "$strings" | while IFS='' read l
+		# read each line in the source file
+		while IFS='' read l
 		 do
 
 			# skip comments and empty lines
@@ -60,8 +75,8 @@ for lproj in "${localisation_dir}"/*.lproj
 				key="${BASH_REMATCH[1]}"
 				dev_value="${BASH_REMATCH[2]}"
 
-				# find an existing translation in current lproj
-				target_line="$( iconv -f UTF-16 -t UTF-8 "$target" 2>/dev/null | grep "^\"${key}\"" )"
+				# find an existing translation
+				target_line="$( grep "^\"${key}\"" "${target}" )"
 				if [[ "$target_line" =~ $localisation_regex ]]
 				 then target_value="${BASH_REMATCH[2]}"
 				 else target_value=""
@@ -80,11 +95,11 @@ for lproj in "${localisation_dir}"/*.lproj
 			 else echo "$l"
 			fi
 
-		# write a temporary file (as UTF-8)
-		done > /tmp/localised.strings
+		# write a temporary file
+		done <"${strings}" >/tmp/localised.strings
 
 		# find any old strings (except placeholders) not found in the current version and append them at the end
-		iconv -f UTF-16 -t UTF-8 "$target" | while IFS='' read l
+		while IFS='' read l
 		 do
 			if [[ "$l" =~ $localisation_regex ]]
 			 then
@@ -96,7 +111,7 @@ for lproj in "${localisation_dir}"/*.lproj
 					grep "$old_key" /tmp/localised.strings &>/dev/null || echo "$l"
 				fi
 			fi
-		done > /tmp/redundant.strings
+		done <"${target}" > /tmp/redundant.strings
 		if [ -s /tmp/redundant.strings ]
 		 then
 			echo $'\n/* Redundant strings:\n' >> /tmp/localised.strings
@@ -104,8 +119,8 @@ for lproj in "${localisation_dir}"/*.lproj
 			echo $'\n */' >> /tmp/localised.strings
 		fi
 
-		# convert into UTF-16 and replace existing translations
-		iconv -f UTF-8 -t UTF-16 /tmp/localised.strings > "$target"
+		# replace existing translations
+		cp -a /tmp/localised.strings "${target}"
 		rm /tmp/{localised,redundant}.strings
 
 	# keep enumerating .strings files, then other .lproj directories; aggregate and uniquate all Missing... warnings
