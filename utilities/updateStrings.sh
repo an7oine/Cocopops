@@ -63,6 +63,9 @@ for lproj in "${localisation_dir}"/*.lproj
 		# target the corresponding file in current lproj
 		target="${lproj}/$( basename ${strings} )"
 
+		# clear out 'missing.strings' content
+		rm /tmp/missing.strings
+
 		# read each line in the source file
 		while IFS='' read l
 		 do
@@ -87,7 +90,7 @@ for lproj in "${localisation_dir}"/*.lproj
 				 then echo "$target_line"
 
 				# otherwise, write the base language version as placeholder (Xcode token) and report it
-				 else echo "\"$key\" = \"<#${dev_value}#>\";"
+				 else echo "\"$key\" = \"<#${dev_value}#>\";" >> /tmp/missing.strings
 					echo "Missing localisation(s) in $( basename ${strings} ) for language $( basename ${lproj} .lproj )" >&2
 				fi
 
@@ -98,7 +101,7 @@ for lproj in "${localisation_dir}"/*.lproj
 		# write a temporary file
 		done <"${strings}" >/tmp/localised.strings
 
-		# find any old strings (except placeholders) not found in the current version and append them at the end
+		# find any old strings (except placeholders) not found in the current version
 		while IFS='' read l
 		 do
 			if [[ "$l" =~ $localisation_regex ]]
@@ -111,17 +114,25 @@ for lproj in "${localisation_dir}"/*.lproj
 					grep "$old_key" /tmp/localised.strings &>/dev/null || echo "$l"
 				fi
 			fi
-		done <"${target}" > /tmp/redundant.strings
-		if [ -s /tmp/redundant.strings ]
-		 then
-			echo $'\n/* Redundant strings:\n' >> /tmp/localised.strings
-			cat /tmp/redundant.strings >> /tmp/localised.strings
-			echo $'\n */' >> /tmp/localised.strings
-		fi
+		done <"${target}" >/tmp/redundant.strings
 
-		# replace existing translations
-		cp -a /tmp/localised.strings "${target}"
-		rm /tmp/{localised,redundant}.strings
+		# Concatenate missing, redundant, and existing strings
+		(
+    		if [ -s /tmp/missing.strings ]
+    		 then
+    		 	echo $'/* MISSING strings:\n'
+    			cat /tmp/missing.strings
+    			echo $'\n */\n'
+    		fi
+    		if [ -s /tmp/redundant.strings ]
+    		 then
+    			echo $'/* redundant strings:\n'
+    			cat /tmp/redundant.strings
+    			echo $'\n */\n'
+    		fi
+    		cat /tmp/localised.strings
+		) > "${target}"
+		rm /tmp/{missing,localised,redundant}.strings 2>/dev/null
 
 	# keep enumerating .strings files, then other .lproj directories; aggregate and uniquate all Missing... warnings
 	done
