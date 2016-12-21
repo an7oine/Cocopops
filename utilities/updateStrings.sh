@@ -64,7 +64,7 @@ for lproj in "${localisation_dir}"/*.lproj
 		target="${lproj}/$( basename ${strings} )"
 
 		# clear out 'missing.strings' content
-		rm /tmp/missing.strings
+		rm -f /tmp/missing.strings
 
 		# read each line in the source file
 		while IFS='' read l
@@ -132,7 +132,7 @@ for lproj in "${localisation_dir}"/*.lproj
     		fi
     		cat /tmp/localised.strings
 		) > "${target}"
-		rm /tmp/{missing,localised,redundant}.strings 2>/dev/null
+		rm -f /tmp/{missing,localised,redundant}.strings
 
 	# keep enumerating .strings files, then other .lproj directories; aggregate and uniquate all Missing... warnings
 	done
