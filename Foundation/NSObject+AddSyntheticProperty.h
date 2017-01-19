@@ -12,7 +12,10 @@
 - (void)s:(t)g { objc_setAssociatedObject(self, @selector(g), g, OBJC_ASSOCIATION_ ## r); } \
 @end
 
+#define PACKED_ARG(...) __VA_ARGS__
+
 // usage example:
 /*
 ADD_SYNTHETIC_PROPERTY_TO_CLASS(NSObject, NSString *, mySyntheticNameString, setMySyntheticNameString, RETAIN_NONATOMIC)
+ADD_SYNTHETIC_PROPERTY_TO_CLASS(NSObject, PACKED_ARG(NSDictionary<NSString *, NSNumber *> *), mySyntheticNameString, setMySyntheticNameString, RETAIN_NONATOMIC)
 */

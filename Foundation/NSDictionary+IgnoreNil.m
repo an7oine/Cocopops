@@ -3,8 +3,7 @@
 //
 
 #import "NSDictionary+IgnoreNil.h"
-
-@import ObjectiveC.runtime;
+#import "NSObject+SwizzleMethods.h"
 
 @implementation NSDictionary (IgnoreNil)
 
@@ -35,17 +34,7 @@
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^
 	{
-		SEL selectorA = @selector(dictionaryWithObjects:forKeys:count:);
-		SEL selectorB =  @selector(dictionaryWithObjectsIgnoringNil:forKeys:count:);
-		Method methodA = class_getClassMethod(self, selectorA);
-		Method methodB = class_getClassMethod(self, selectorB);
-
-		Class meta = object_getClass(self);
-
-		if (class_addMethod(meta, selectorA, method_getImplementation(methodB), method_getTypeEncoding(methodB)))
-			class_replaceMethod(meta, selectorB, method_getImplementation(methodA), method_getTypeEncoding(methodA));
-		else
-			method_exchangeImplementations(methodA, methodB);
+		[self exchangeClassImplementationsWithSelector:@selector(dictionaryWithObjects:forKeys:count:) andSelector:@selector(dictionaryWithObjectsIgnoringNil:forKeys:count:)];
 	});
 }
 
