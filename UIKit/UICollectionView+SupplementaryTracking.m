@@ -55,7 +55,7 @@ ADD_SYNTHETIC_PROPERTY_TO_CLASS(UICollectionView, PACKED_ARG(NSMutableDictionary
 			
 			// install a new implementation
 			[self exchangeInstanceImplementationsWithSelector:@selector(supplementaryViewForElementKind:atIndexPath:) andSelector:@selector(supplementaryViewForElementKind_iOS8:atIndexPath:)];
-			[self exchangeInstanceImplementationsWithSelector:@selector(indexPathsForVisibleSupplementaryElementsOfKind_iOS8:) andSelector:@selector(indexPathsForVisibleSupplementaryElementsOfKind_iOS8:)];
+			[self exchangeInstanceImplementationsWithSelector:@selector(indexPathsForVisibleSupplementaryElementsOfKind:) andSelector:@selector(indexPathsForVisibleSupplementaryElementsOfKind_iOS8:)];
 			[self exchangeInstanceImplementationsWithSelector:@selector(visibleSupplementaryViewsOfKind:) andSelector:@selector(visibleSupplementaryViewsOfKind_iOS8:)];
 		}
 	});
