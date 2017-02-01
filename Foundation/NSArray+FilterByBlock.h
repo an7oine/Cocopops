@@ -6,7 +6,14 @@
 
 @interface NSArray (FilterByBlock)
 
-// return objects qualified by the test block
-- (NSArray *)objectsPassingTest:(BOOL (^)(id obj, NSUInteger idx, BOOL *stop))test;
+/**
+ Return objects qualified by given block
+ */
+- (NSArray *)objectsPassing:(BOOL (^)(id obj, NSUInteger idx, BOOL *stop))test;
+
+/**
+ Return the first object qualified by given block
+ */
+- (id)firstObjectPassing:(BOOL (^)(id obj, NSUInteger idx))test;
 
 @end

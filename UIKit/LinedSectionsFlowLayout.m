@@ -67,7 +67,7 @@ NSString *const UICollectionElementKindSectionLining = @"UICollectionElementKind
 // add lining attributes to super's implementation
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
 {
-	NSArray *liningAttributes = [_sectionLiningAttributes objectsPassingTest:^BOOL(UICollectionViewLayoutAttributes *obj, NSUInteger idx, BOOL *stop) {
+	NSArray *liningAttributes = [_sectionLiningAttributes objectsPassing:^BOOL(UICollectionViewLayoutAttributes *obj, NSUInteger idx, BOOL *stop) {
 		return CGRectIntersectsRect(rect, obj.frame);
 	}];
 	return [[super layoutAttributesForElementsInRect:rect] arrayByAddingObjectsFromArray:liningAttributes];

@@ -216,7 +216,7 @@
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect
 {
-    return [_layoutAttributes.allValues objectsPassingTest:^BOOL(UICollectionViewLayoutAttributes *obj, NSUInteger idx, BOOL *stop) {
+    return [_layoutAttributes.allValues objectsPassing:^BOOL(UICollectionViewLayoutAttributes *obj, NSUInteger idx, BOOL *stop) {
         return CGRectIntersectsRect(rect, obj.frame);
     }];
 }
