@@ -118,19 +118,20 @@ for lproj in "${localisation_dir}"/*.lproj
 
 		# Concatenate missing, redundant, and existing strings
 		(
-    		if [ -s /tmp/missing.strings ]
-    		 then
-    		 	echo $'/* MISSING strings:\n'
-    			cat /tmp/missing.strings
-    			echo $'\n */\n'
-    		fi
-    		if [ -s /tmp/redundant.strings ]
-    		 then
-    			echo $'/* redundant strings:\n'
-    			cat /tmp/redundant.strings
-    			echo $'\n */\n'
-    		fi
-    		cat /tmp/localised.strings
+			echo -n $'\xef\xbb\xbf'
+			if [ -s /tmp/missing.strings ]
+			 then
+				echo $'/* MISSING strings:\n'
+				cat /tmp/missing.strings
+				echo $'\n */\n'
+			fi
+			if [ -s /tmp/redundant.strings ]
+			 then
+				echo $'/* redundant strings:\n'
+				cat /tmp/redundant.strings
+				echo $'\n */\n'
+			fi
+			sed '1s/'$'\xef\xbb\xbf'// /tmp/localised.strings
 		) > "${target}"
 		rm -f /tmp/{missing,localised,redundant}.strings
 
