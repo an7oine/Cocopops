@@ -542,18 +542,21 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 		{
 			_popoverView.userInteractionEnabled = NO;
 
+			UIView *oldBackgroundView = _backgroundView;
+			UIViewController *oldContentViewController = self.contentViewController;
 			[UIView animateWithDuration:0.3f delay:0.0 options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState animations:^
-			 {
-				 _backgroundView.alpha = 0.0;
-			 } completion:^(BOOL finished)
-			 {
-				 [self.contentViewController viewDidDisappear:animated];
-				 [_backgroundView removeFromSuperview];
-				 _backgroundView = nil;
-				 _popoverView = nil;
-				 _popoverVisible = NO;
-				 _popoverArrowDirection = UIPopoverArrowDirectionUnknown;
-			 }];
+			{
+				oldBackgroundView.alpha = 0.0;
+			} completion:^(BOOL finished)
+			{
+				[oldContentViewController viewDidDisappear:animated];
+				[oldBackgroundView removeFromSuperview];
+				 
+			}];
+			_backgroundView = nil;
+			_popoverView = nil;
+			_popoverVisible = NO;
+			_popoverArrowDirection = UIPopoverArrowDirectionUnknown;
 		}
 		else
 		{

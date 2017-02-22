@@ -9,7 +9,6 @@ A Navigation Controller optimised for displaying navigable content inside a popo
  */
 @interface PopoverNavigationController : UINavigationController
 
-@property (nonatomic, readwrite, weak) id popoverHandler;
 @property (nonatomic) CGFloat minimumWidth;
 
 @end

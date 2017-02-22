@@ -434,7 +434,10 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 
 #pragma mark - Content size calculation
+/*
 
+XXX seems to lock thread?
+ 
 - (void)viewWillLayoutSubviews
 {
 	[super viewWillLayoutSubviews];
@@ -445,6 +448,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[super viewDidLayoutSubviews];
 	[self didChangeValueForKey:@"preferredContentSize"];
 }
+*/
 
 @synthesize preferredContentSize=_preferredContentSize;
 - (CGSize)preferredContentSize
