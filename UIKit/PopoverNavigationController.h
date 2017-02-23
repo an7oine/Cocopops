@@ -18,6 +18,7 @@ An informal protocol for querying View Controllers whether they want their navig
  */
 @interface UIViewController ()
 
-@property (nonatomic) BOOL hidesNavigationBarWhenVisible;
+@property (nonatomic) BOOL hidesNavigationBarWhenPushed; // default NO
+@property (nonatomic) BOOL hidesToolbarWhenPushed; // default YES
 
 @end

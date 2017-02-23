@@ -24,7 +24,7 @@ extern UITableViewCellAccessoryType const UITableViewCellAccessoryBlank;
 @property (nonatomic) NSMutableArray *backgroundColours;
 @property (nonatomic) NSMutableArray *blocks;
 
-@property (nonatomic) BOOL hidesNavigationBarWhenVisible;
+@property (nonatomic) BOOL hidesNavigationBarWhenPushed;
 
 - (void)clearContent;
 - (void)setHeader:(NSString *)header forSection:(NSInteger)section;

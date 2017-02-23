@@ -50,6 +50,7 @@
 	self.minimumWidth = 160.0f;
 	
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:rootViewController];
+	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:rootViewController];
 	self.observedViewController = rootViewController;
 	
 	_myPopGestureRecogniser = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePopGesture:)];
@@ -82,14 +83,18 @@
 - (void)setObservedViewController:(UIViewController *)observedViewController
 {
 	[_observedViewController removeObserver:self forKeyPath:@"preferredContentSize" context:(__bridge void *)PopoverNavigationController.class];
-	if ([_observedViewController respondsToSelector:@selector(hidesNavigationBarWhenVisible)])
-		[_observedViewController removeObserver:self forKeyPath:@"hidesNavigationBarWhenVisible" context:(__bridge void *)PopoverNavigationController.class];
+	if ([_observedViewController respondsToSelector:@selector(hidesNavigationBarWhenPushed)])
+		[_observedViewController removeObserver:self forKeyPath:@"hidesNavigationBarWhenPushed" context:(__bridge void *)PopoverNavigationController.class];
+	if ([_observedViewController respondsToSelector:@selector(hidesToolbarWhenPushed)])
+		[_observedViewController removeObserver:self forKeyPath:@"hidesToolbarWhenPushed" context:(__bridge void *)PopoverNavigationController.class];
 	
 	_observedViewController = observedViewController;
 	
 	[_observedViewController addObserver:self forKeyPath:@"preferredContentSize" options:NSKeyValueObservingOptionInitial|NSKeyValueObservingOptionNew context:(__bridge void *)PopoverNavigationController.class];
-	if ([_observedViewController respondsToSelector:@selector(hidesNavigationBarWhenVisible)])
-		[_observedViewController addObserver:self forKeyPath:@"hidesNavigationBarWhenVisible" options:NSKeyValueObservingOptionInitial|NSKeyValueObservingOptionNew context:(__bridge void *)PopoverNavigationController.class];
+	if ([_observedViewController respondsToSelector:@selector(hidesNavigationBarWhenPushed)])
+		[_observedViewController addObserver:self forKeyPath:@"hidesNavigationBarWhenPushed" options:NSKeyValueObservingOptionInitial|NSKeyValueObservingOptionNew context:(__bridge void *)PopoverNavigationController.class];
+	if ([_observedViewController respondsToSelector:@selector(hidesToolbarWhenPushed)])
+		[_observedViewController addObserver:self forKeyPath:@"hidesToolbarWhenPushed" options:NSKeyValueObservingOptionNew context:(__bridge void *)PopoverNavigationController.class];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
@@ -116,9 +121,14 @@
 		
 		_isObserving = NO;
 	}
-	else if ([keyPath isEqualToString:@"hidesNavigationBarWhenVisible"])
+	else if ([keyPath isEqualToString:@"hidesNavigationBarWhenPushed"])
 	{
 		self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:object];
+		[object setPreferredContentSize:[object preferredContentSize]];
+	}
+	else if ([keyPath isEqualToString:@"hidesToolbarWhenPushed"])
+	{
+		self.toolbarHidden = [self shouldHideToolbarWithTopViewController:object];
 		[object setPreferredContentSize:[object preferredContentSize]];
 	}
 }
@@ -155,15 +165,18 @@
 
 - (BOOL)shouldHideNavigationBarWithTopViewController:(UIViewController *)viewController
 {
-	if (! [viewController respondsToSelector:@selector(hidesNavigationBarWhenVisible)])
+	if (! [viewController respondsToSelector:@selector(hidesNavigationBarWhenPushed)])
 		return NO;
 	else
-		return viewController.hidesNavigationBarWhenVisible;
+		return viewController.hidesNavigationBarWhenPushed;
 }
 
-- (void)setNavigationBarHidden:(BOOL)hidden animated:(BOOL)animated
+- (BOOL)shouldHideToolbarWithTopViewController:(UIViewController *)viewController
 {
-	[super setNavigationBarHidden:hidden animated:animated];
+	if (! [viewController respondsToSelector:@selector(hidesToolbarWhenPushed)])
+		return YES;
+	else
+		return viewController.hidesToolbarWhenPushed;
 }
 
 
@@ -173,6 +186,7 @@
 {
 	// refresh navigation bar status and content size
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:viewController];
+	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:viewController];
 	self.observedViewController = viewController;
 	
 	[super pushViewController:viewController animated:animated];
@@ -187,6 +201,7 @@
 	
 	// refresh navigation bar status and content size
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:nextTopViewController];
+	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:nextTopViewController];
 	self.observedViewController = nextTopViewController;
 	
 	return [super popViewControllerAnimated:animated];
@@ -200,10 +215,10 @@
 	if (gestureRecognizer != _myPopGestureRecogniser)
 		return YES;
 	
-	// reject unless touches began left of the navigable content
+	// reject unless touches began left of (or exactly at) the edge of navigable content
 	CGPoint location = [[[gestureRecognizer valueForKey:@"touches"] firstObject] previousLocationInView:nil];
 	CGRect frame = [UIApplication.sharedApplication.keyWindow convertRect:self.topViewController.view.bounds fromView:self.topViewController.view];
-	if (location.x >= CGRectGetMinX(frame))
+	if (location.x > CGRectGetMinX(frame))
 		return NO;
 	
 	// reject anything but right-pointing gestures
