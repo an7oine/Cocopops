@@ -6,7 +6,7 @@
 
 @interface DispatchBarButtonItem : UIBarButtonItem
 
-- (instancetype)initWithBarButtonSystemItem:(UIBarButtonSystemItem)systemItem handler:(void (^)(void))handler;
-- (instancetype)initWithTitle:(NSString *)title style:(UIBarButtonItemStyle)style handler:(void (^)(void))handler;
+- (instancetype)initWithBarButtonSystemItem:(UIBarButtonSystemItem)systemItem handler:(void (^)(DispatchBarButtonItem *barButtonItem))handler;
+- (instancetype)initWithTitle:(NSString *)title style:(UIBarButtonItemStyle)style handler:(void (^)(DispatchBarButtonItem *barButtonItem))handler;
 
 @end
