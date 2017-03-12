@@ -12,7 +12,7 @@
 
 - (void)setIndicatorFrame
 {
-	CGFloat verticalOffset = (_collapsedStatus? 0.3f : -0.3f) * CGRectGetHeight(self.bounds);
+	CGFloat verticalOffset = (self.collapsedStatus? 0.3f : -0.3f) * CGRectGetHeight(self.bounds);
 	_indicatorLabel.frame = CGRectMake(CGRectGetMaxX(self.bounds)-1.6f*CGRectGetHeight(self.bounds), CGRectGetMidY(self.bounds)-0.8f*CGRectGetHeight(self.bounds) + verticalOffset, 1.6f*CGRectGetHeight(self.bounds), 1.6f*CGRectGetHeight(self.bounds));
 	
 	UIFontDescriptor *fontDescriptor = [_indicatorLabel.font.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitCondensed];
@@ -30,21 +30,30 @@
 	
 	if (! _tapRecogniser)
 		[self addGestureRecognizer:_tapRecogniser = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gotTapGesture:)]];
+	
+	[self setNeedsLayout];
 }
 
-@synthesize collapsedStatus=_collapsedStatus;
+- (void)layoutSubviews
+{
+	[super layoutSubviews];
+	_indicatorLabel.text = self.collapsedStatus? @"⌃" : @"⌄";
+	[self setIndicatorFrame];
+}
+
+- (BOOL)collapsedStatus
+{
+	return [self.delegate tableView:(UITableView *)self.superview collapsedStatusForSectionWithIdentifier:self.identifier];
+}
 - (void)setCollapsedStatus:(BOOL)collapsedStatus
 {
-	_collapsedStatus = collapsedStatus;
-	_indicatorLabel.text = _collapsedStatus? @"⌃" : @"⌄";
-	[self setIndicatorFrame];
+	[self.delegate tableView:(UITableView *)self.superview setCollapsedStatus:collapsedStatus forSectionWithIdentifier:self.identifier];
+	[self setNeedsLayout];
 }
 
 - (IBAction)gotTapGesture:(id)sender
 {
 	self.collapsedStatus = self.collapsedStatus ^ YES;
-
-	[self.delegate tableView:(UITableView *)self.superview didSetCollapsedStatus:self.collapsedStatus forSectionWithIdentifier:self.identifier];
 }
 
 @end

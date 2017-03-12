@@ -6,13 +6,13 @@
 
 @protocol CollapsibleTableSectionHeaderDelegate <NSObject>
 
-- (void)tableView:(UITableView *)tableView didSetCollapsedStatus:(BOOL)collapsedStatus forSectionWithIdentifier:(id)identifier;
+- (BOOL)tableView:(UITableView *)tableView collapsedStatusForSectionWithIdentifier:(id)identifier;
+- (void)tableView:(UITableView *)tableView setCollapsedStatus:(BOOL)collapsedStatus forSectionWithIdentifier:(id)identifier;
 
 @end
 
 @interface CollapsibleTableSectionHeaderView : UITableViewHeaderFooterView
 
-@property (nonatomic) BOOL collapsedStatus;
 @property (nonatomic) id identifier;
 
 @property (nonatomic, weak) id <CollapsibleTableSectionHeaderDelegate> delegate;
