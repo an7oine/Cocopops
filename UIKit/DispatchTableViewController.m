@@ -105,6 +105,8 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 @implementation DispatchTableViewController
 {
 	CGFloat _originalHeaderHeight, _originalFooterHeight;
+
+	void (^_reentry)(void);
 }
 
 @synthesize titles=_titles, details=_details;
@@ -152,6 +154,14 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	_originalFooterHeight = self.tableView.sectionFooterHeight;
 	if (self.tableView.style == UITableViewStyleGrouped)
 		self.tableView.sectionHeaderHeight = self.tableView.sectionFooterHeight = 0.0f;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+	[super viewWillAppear:animated];
+	
+	if (_reentry)
+		_reentry(),	_reentry = nil;
 }
 
 
@@ -322,6 +332,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 {
 	NSAssert([title isKindOfClass:NSString.class] || [title isKindOfClass:NSAttributedString.class], @"'title' must be an instance of NSString or NSAttributedString !");
 	NSAssert(! detail || [detail isKindOfClass:NSString.class] || [detail isKindOfClass:NSAttributedString.class], @"'detail' must be an instance of NSString or NSAttributedString !");
+	NSAssert(! accessoryView || [accessoryView isKindOfClass:UIView.class] || [accessoryView isKindOfClass:NSNumber.class], @"'accessoryView' must be an instance of UIView or NSNumber !");
 
 	[self prepareSection:section];
 
@@ -343,9 +354,25 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	return [self addChoiceIntoSection:section withTitle:title detail:detail accessoryView:(UIView *)@( accessoryType ) backgroundColour:backgroundColour block:block];
 }
 
-- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour block:(void (^)(NSIndexPath *))block
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title detail:(NSString *)detail accessoryView:(UIView *)accessoryView backgroundColour:(UIColor *)backgroundColour nextViewController:(UIViewController * (^)(NSIndexPath *indexPath))nextViewController reentry:(void (^)(NSIndexPath *indexPath))reentry
 {
-	return [self addChoiceIntoSection:section withTitle:title detail:nil accessoryType:accessoryType backgroundColour:backgroundColour block:block];
+	__weak typeof(self) nonretainedSelf = self;
+	return [self addChoiceIntoSection:section withTitle:title detail:detail accessoryView:accessoryView backgroundColour:backgroundColour block:^(NSIndexPath *indexPath)
+	{
+		UIViewController *viewController = nextViewController(indexPath);
+		if (viewController)
+		{
+			__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+			if (retainedSelf && reentry)
+				retainedSelf->_reentry = ^{ reentry(indexPath); };
+			[retainedSelf.navigationController pushViewController:viewController animated:YES];
+		}
+	}];
+}
+
+- (NSInteger)addChoiceIntoSection:(NSInteger)section withTitle:(NSString *)title detail:(NSString *)detail accessoryType:(UITableViewCellAccessoryType)accessoryType backgroundColour:(UIColor *)backgroundColour nextViewController:(UIViewController * (^)(NSIndexPath *indexPath))nextViewController reentry:(void (^)(NSIndexPath *indexPath))reentry
+{
+	return [self addChoiceIntoSection:section withTitle:title detail:detail accessoryView:(UIView *)@( accessoryType ) backgroundColour:backgroundColour nextViewController:nextViewController reentry:reentry];
 }
 
 - (NSInteger)moveChoiceFromSection:(NSInteger)section item:(NSInteger)item intoSection:(NSInteger)newSection
