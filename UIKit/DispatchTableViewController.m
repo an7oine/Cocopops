@@ -129,6 +129,13 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[self clearContent];
 	return self;
 }
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+	if (! (self = [super initWithCoder:aDecoder]))
+		return nil;
+	[self clearContent];
+	return self;
+}
 
 - (Class)cellClass
 {
