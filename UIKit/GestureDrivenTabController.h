@@ -19,6 +19,7 @@ typedef enum
 	kTabGestureNone = 0,			// no gestures will be recognised
 	kTabGestureEdge = 1,			// edge-swipe to switch tabs
 	kTabGestureTwoFinger = 2,		// swipe sideways using two fingers to switch tabs
+	kTabGestureAutomatic = 3,		// use edge-swipes on iPhone, two-finger swipes on iPad
 } gestureDrivenTabGestureType_t;
 
 @protocol GestureDrivenTabControllerDelegate <UITabBarControllerDelegate>

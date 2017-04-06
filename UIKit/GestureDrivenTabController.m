@@ -13,10 +13,33 @@
 	BOOL _panStartedFromTheLeft;
 }
 
+@synthesize gestureType=_gestureType;
+- (void)setGestureType:(gestureDrivenTabGestureType_t)gestureType
+{
+	if (gestureType == kTabGestureAutomatic)
+		_gestureType = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone? kTabGestureEdge : kTabGestureTwoFinger;
+	else
+		_gestureType = gestureType;
+
+	if (! self.transitionDuration)
+		self.transitionDuration = 0.2f;
+	
+	if (self.isViewLoaded)
+		[self insertGestureRecognisers];
+}
+
 - (void)viewDidLoad
 {
-    [super viewDidLoad];
+	[super viewDidLoad];
+	
+	[self insertGestureRecognisers];
+}
 
+- (void)insertGestureRecognisers
+{
+	for (UIGestureRecognizer *oldRecogniser in self.view.gestureRecognizers)
+		[self.view removeGestureRecognizer:oldRecogniser];
+	
 	if (self.gestureType == kTabGestureEdge)
 	{
 		UIScreenEdgePanGestureRecognizer *leftEdgeRecogniser = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(switchLeftWithGesture:)];
@@ -40,9 +63,6 @@
 		
 		_recognisers = @[ panRecogniser ];
 	}
-	
-	if (! self.transitionDuration)
-		self.transitionDuration = 0.2f;
 }
 
 
