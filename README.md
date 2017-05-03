@@ -1,2 +1,2 @@
 # Cocopops
-Reusable Categories &amp; Subclasses for Foundation, AppKit, UIKit
+Reusable routines, Categories, &amp; Subclasses for plain-C, Foundation, AppKit, &amp; UIKit
