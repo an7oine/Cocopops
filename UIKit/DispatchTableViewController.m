@@ -109,6 +109,8 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	void (^_reentry)(void);
 }
 
+@synthesize hidesNavigationBarWhenPushed;
+
 @synthesize titles=_titles, details=_details;
 @synthesize headers=_headers, footers=_footers;
 @synthesize accessoryTypes=_accessoryTypes;
