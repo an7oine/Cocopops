@@ -50,7 +50,9 @@
 	self.minimumWidth = 160.0f;
 	
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:rootViewController];
+#if ! TARGET_OS_TV
 	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:rootViewController];
+#endif
 	self.observedViewController = rootViewController;
 	
 	_myPopGestureRecogniser = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePopGesture:)];
@@ -126,11 +128,13 @@
 		self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:object];
 		[object setPreferredContentSize:[object preferredContentSize]];
 	}
+#if ! TARGET_OS_TV
 	else if ([keyPath isEqualToString:@"hidesToolbarWhenPushed"])
 	{
 		self.toolbarHidden = [self shouldHideToolbarWithTopViewController:object];
 		[object setPreferredContentSize:[object preferredContentSize]];
 	}
+#endif
 }
 
 
@@ -186,7 +190,9 @@
 {
 	// refresh navigation bar status and content size
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:viewController];
+#if ! TARGET_OS_TV
 	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:viewController];
+#endif
 	self.observedViewController = viewController;
 	
 	[super pushViewController:viewController animated:animated];
@@ -201,7 +207,9 @@
 	
 	// refresh navigation bar status and content size
 	self.navigationBarHidden = [self shouldHideNavigationBarWithTopViewController:nextTopViewController];
+#if ! TARGET_OS_TV
 	self.toolbarHidden = [self shouldHideToolbarWithTopViewController:nextTopViewController];
+#endif
 	self.observedViewController = nextTopViewController;
 	
 	return [super popViewControllerAnimated:animated];
