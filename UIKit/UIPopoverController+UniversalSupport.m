@@ -208,7 +208,7 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 	_popoverView.opaque = NO;
 	
 	if (NSClassFromString(@"UIVisualEffectView") != Nil)
-		_arrowView = [[UIVisualEffectView alloc] initWithEffect:[[UIBlurEffect alloc] init]];
+		_arrowView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleExtraLight]];
 	else
 	{
 		_arrowView = [[UIView alloc] initWithFrame:CGRectZero];
