@@ -300,7 +300,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
     _blocks = [NSMutableArray new];
 	
 	if (self.isViewLoaded)
-		[self.tableView deleteSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfSections)] withRowAnimation:UITableViewRowAnimationAutomatic];
+        [self.tableView reloadData];
 }
 
 - (void)prepareSection:(NSInteger)section
