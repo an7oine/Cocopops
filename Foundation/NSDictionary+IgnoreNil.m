@@ -17,7 +17,11 @@
 	{
 		id object = objects[i], key = keys[i];
 		if (object && key)
-			nonnilObjects[nonnilCount] = object, nonnilKeys[nonnilCount] = key, nonnilCount++;
+		{
+			nonnilObjects[nonnilCount] = object;
+			nonnilKeys[nonnilCount] = key;
+			nonnilCount++;
+		}
 	}
 
 	// invoke the original @{ } interpreter

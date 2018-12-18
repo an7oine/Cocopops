@@ -422,15 +422,19 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 	UIInterfaceOrientation interfaceOrientation = UIInterfaceOrientationWithDeviceOrientation(deviceOrientation);
 
 	_deviceOrientation = deviceOrientation;
+
+	__weak typeof(self) nonretainedSelf = self;
 	[self.contentViewController willRotateToInterfaceOrientation:interfaceOrientation duration:0.3f];
 	[UIView animateWithDuration:0.3f animations:^
 	{
-		[self.contentViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:0.3f];
-		[self setupViewFramesFirstTime:NO];
+		__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+		[retainedSelf.contentViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:0.3f];
+		[retainedSelf setupViewFramesFirstTime:NO];
 	} completion:^(BOOL finished)
 	{
-		[self.contentViewController didRotateFromInterfaceOrientation:_interfaceOrientation];
-		_interfaceOrientation = interfaceOrientation;
+		__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+		[retainedSelf.contentViewController didRotateFromInterfaceOrientation:retainedSelf->_interfaceOrientation];
+		retainedSelf->_interfaceOrientation = interfaceOrientation;
 	}];
 }
 
@@ -477,14 +481,17 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 		_popoverView.userInteractionEnabled = NO;
 		_backgroundView.alpha = 0.0f;
 
+		__weak typeof(self) nonretainedSelf = self;
 		[UIView animateWithDuration:0.1f delay:0.0 options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState animations:^
 		 {
-			 _backgroundView.alpha = 1.0f;
+			 __strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+			 retainedSelf->_backgroundView.alpha = 1.0f;
 		 } completion:^(BOOL finished)
 		 {
-			 _popoverView.userInteractionEnabled = YES;
-			 [self.contentViewController viewDidAppear:YES];
-			 [_popoverView becomeFirstResponder];
+			 __strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+			 retainedSelf->_popoverView.userInteractionEnabled = YES;
+			 [retainedSelf.contentViewController viewDidAppear:YES];
+			 [retainedSelf->_popoverView becomeFirstResponder];
 		 }];
 	}
 	else

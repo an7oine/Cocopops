@@ -170,7 +170,10 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[super viewWillAppear:animated];
 	
 	if (_reentry)
-		_reentry(),	_reentry = nil;
+	{
+		_reentry();
+		_reentry = nil;
+	}
 }
 
 

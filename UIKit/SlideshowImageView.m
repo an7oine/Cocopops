@@ -20,9 +20,11 @@
 		[NSRunLoop.mainRunLoop addTimer:transitionTimer forMode:NSDefaultRunLoopMode];
 		_transitionTimer = transitionTimer;
 		
+		__weak typeof(self) nonretainedSelf = self;
 		[UIView transitionWithView:self duration:self.animatedTransitionDuration options:self.animatedTransitionOptions animations:^
 		{
-			[super setImage:self.animationImages[_currentImageIndex = 0]];
+			__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+			[super setImage:retainedSelf.animationImages[retainedSelf->_currentImageIndex = 0]];
 		} completion:nil];
 		
 		_isAnimatingTransitions = YES;
@@ -48,10 +50,12 @@
 		[timer invalidate];
 		return;
 	}
+	__weak typeof(self) nonretainedSelf = self;
 	[UIView transitionWithView:self duration:self.animatedTransitionDuration options:self.animatedTransitionOptions animations:^
 	{
-		_currentImageIndex = (_currentImageIndex+1) % self.animationImages.count;
-		[super setImage:self.animationImages[_currentImageIndex]];
+		__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+		retainedSelf->_currentImageIndex = (retainedSelf->_currentImageIndex+1) % retainedSelf.animationImages.count;
+		[super setImage:retainedSelf.animationImages[retainedSelf->_currentImageIndex]];
 	} completion:nil];
 }
 

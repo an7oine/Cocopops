@@ -268,7 +268,9 @@ NSString * const BannerViewActionDidFinish = @"BannerViewActionDidFinish";
 {
 	[_adContentView removeFromSuperview];
 	[_adContainerView removeFromSuperview];
-	_adContentView.delegate = nil, _adContentView = nil, _adContainerView = nil;
+	_adContentView.delegate = nil;
+	_adContentView = nil;
+	_adContainerView = nil;
 	_adViewHasContent = NO;
 }
 @synthesize adViewHasContent=_adViewHasContent;
