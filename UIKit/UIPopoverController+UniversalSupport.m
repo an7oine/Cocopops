@@ -485,10 +485,14 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 		[UIView animateWithDuration:0.1f delay:0.0 options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState animations:^
 		 {
 			 __strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+             if (! retainedSelf)
+                 return;
 			 retainedSelf->_backgroundView.alpha = 1.0f;
 		 } completion:^(BOOL finished)
 		 {
 			 __strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+             if (! retainedSelf)
+                 return;
 			 retainedSelf->_popoverView.userInteractionEnabled = YES;
 			 [retainedSelf.contentViewController viewDidAppear:YES];
 			 [retainedSelf->_popoverView becomeFirstResponder];
