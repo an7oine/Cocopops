@@ -255,7 +255,9 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	else
 		NSAssert(NO, @"Accessories must be either UIView objects or numbered standard accessory identifiers");
 	
-	cell.backgroundColor = _backgroundColours[indexPath.section][indexPath.row];
+	UIColor *backgroundColour = _backgroundColours[indexPath.section][indexPath.row];
+    if (backgroundColour != (UIColor *)NSNull.null)
+        cell.backgroundColor = backgroundColour;
 	return cell;
 }
 
@@ -352,7 +354,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 	[_titles[section] addObject:title ?: NSNull.null];
 	[_details[section] addObject:detail ?: NSNull.null];
 	[_accessoryTypes[section] addObject:accessoryView ?: NSNull.null];
-	[_backgroundColours[section] addObject:backgroundColour ?: UIColor.whiteColor];
+	[_backgroundColours[section] addObject:backgroundColour ?: NSNull.null];
 	[_blocks[section] addObject:block ?: ^(NSIndexPath *indexPath){}];
 	
 	if (self.isViewLoaded)
@@ -465,7 +467,7 @@ UITableViewCellAccessoryType const UITableViewCellAccessoryBlank = (UITableViewC
 
 - (void)setBackgroundColour:(UIColor *)backgroundColour forChoiceAtSection:(NSInteger)section item:(NSInteger)item
 {
-	_backgroundColours[section][item] = backgroundColour ?: UIColor.whiteColor;
+	_backgroundColours[section][item] = backgroundColour ?: NSNull.null;
 	
 	if (self.isViewLoaded)
 		[self.tableView reloadRowsAtIndexPaths:@[ [NSIndexPath indexPathForItem:item inSection:section] ] withRowAnimation:UITableViewRowAnimationAutomatic];
