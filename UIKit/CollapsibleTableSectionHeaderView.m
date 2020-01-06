@@ -12,10 +12,14 @@
 
 - (void)setIndicatorFrame
 {
-	CGFloat verticalOffset = (self.collapsedStatus? 0.3f : -0.3f) * CGRectGetHeight(self.bounds);
-	_indicatorLabel.frame = CGRectMake(CGRectGetMaxX(self.bounds)-1.6f*CGRectGetHeight(self.bounds), CGRectGetMidY(self.bounds)-0.8f*CGRectGetHeight(self.bounds) + verticalOffset, 1.6f*CGRectGetHeight(self.bounds), 1.6f*CGRectGetHeight(self.bounds));
+	_indicatorLabel.frame = CGRectMake(
+        CGRectGetMaxX(self.bounds)-0.8f*CGRectGetHeight(self.bounds),
+        CGRectGetMidY(self.bounds)-0.6f*CGRectGetHeight(self.bounds),
+        1.6f*CGRectGetHeight(self.bounds),
+        1.6f*CGRectGetHeight(self.bounds)
+    );
 	
-	UIFontDescriptor *fontDescriptor = [_indicatorLabel.font.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitCondensed];
+	UIFontDescriptor *fontDescriptor = [_indicatorLabel.font.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitExpanded];
 	_indicatorLabel.font = [UIFont fontWithDescriptor:fontDescriptor size:1.6f*CGRectGetHeight(self.bounds)];
 	_indicatorLabel.textColor = [UIColor colorWithWhite:0.7f alpha:0.7f];
 }
@@ -37,7 +41,7 @@
 - (void)layoutSubviews
 {
 	[super layoutSubviews];
-	_indicatorLabel.text = self.collapsedStatus? @"⌃" : @"⌄";
+	_indicatorLabel.text = self.collapsedStatus? @"˄" : @"˅";
 	[self setIndicatorFrame];
 }
 
