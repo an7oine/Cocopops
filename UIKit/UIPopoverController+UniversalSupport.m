@@ -433,6 +433,8 @@ UIInterfaceOrientation UIInterfaceOrientationWithDeviceOrientation(UIDeviceOrien
 	} completion:^(BOOL finished)
 	{
 		__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+        if (! retainedSelf)
+            return;
 		[retainedSelf.contentViewController didRotateFromInterfaceOrientation:retainedSelf->_interfaceOrientation];
 		retainedSelf->_interfaceOrientation = interfaceOrientation;
 	}];

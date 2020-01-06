@@ -24,6 +24,8 @@
 		[UIView transitionWithView:self duration:self.animatedTransitionDuration options:self.animatedTransitionOptions animations:^
 		{
 			__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+            if (! retainedSelf)
+                return;
 			[super setImage:retainedSelf.animationImages[retainedSelf->_currentImageIndex = 0]];
 		} completion:nil];
 		
@@ -54,6 +56,8 @@
 	[UIView transitionWithView:self duration:self.animatedTransitionDuration options:self.animatedTransitionOptions animations:^
 	{
 		__strong typeof(nonretainedSelf) retainedSelf = nonretainedSelf;
+        if (! retainedSelf)
+            return;
 		retainedSelf->_currentImageIndex = (retainedSelf->_currentImageIndex+1) % retainedSelf.animationImages.count;
 		[super setImage:retainedSelf.animationImages[retainedSelf->_currentImageIndex]];
 	} completion:nil];
